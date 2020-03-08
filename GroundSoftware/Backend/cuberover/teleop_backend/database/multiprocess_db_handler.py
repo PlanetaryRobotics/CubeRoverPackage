@@ -66,6 +66,40 @@ class MultiprocessDbHandler:
             self.__proc.terminate()
 
     @staticmethod
+    def new_command_from_db_output(new_cmd_dict):
+        new_cmd = None
+        if USING_IDL:
+            cmd_cls = msg_utilities.NAME_TO_CLASS_MAP[new_cmd_dict["name"]]
+            try:
+                new_cmd = cmd_cls.from_database_object(new_cmd_dict)
+            except TypeError as err:
+                print("[MultiprocessDbHandler]: ERROR occurred when attempting to parse the database "
+                        "object {} to the command class {}. Error: {}".format(new_cmd_dict,
+                                                                            cmd_cls.__name__,
+                                                                            err))
+        else:
+            new_cmd = command.Command.from_database(new_cmd_dict)
+        return new_cmd
+
+    @staticmethod
+    def db_new_commands_handler(db_collection, 
+                                recently_updated_lookup_ids,
+                                new_command_output_queue):
+        new_commands = db_collection.changes.get_all_new()
+        for new_cmd_dict in new_commands:
+            if new_cmd_dict["lookupID"] in recently_updated_lookup_ids:
+                print("[MultiprocessDbHandler]: Ignoring new command in change stream because its lookup ID "
+                        "was in the recently updated lookup ID buffer "
+                        "(lookup ID = {})".format(new_cmd_dict["lookupID"]))
+            else:
+                print("[MultiprocessDbHandler]: Got new command:", new_cmd_dict)
+                # new_command_from_db_output(new_cmd_dict)
+                new_cmd = MultiprocessDbHandler.new_command_from_db_output(new_cmd_dict)
+
+                if new_cmd:
+                    new_command_output_queue.put(new_cmd)
+
+    @staticmethod
     def db_interaction_task(app_wide_shutdown_event,
                             this_handler_shutdown_event,
                             db_connection_info,
@@ -87,35 +121,11 @@ class MultiprocessDbHandler:
                         recently_updated_lookup_ids.append(status_update.lookup_id)
                 except queue.Empty:
                     pass
-
                 # Next, handle any new commands in the database
-                new_commands = db_collection.changes.get_all_new()
-                for new_cmd_dict in new_commands:
-                    if new_cmd_dict["lookupID"] in recently_updated_lookup_ids:
-                        print("[MultiprocessDbHandler]: Ignoring new command in change stream because its lookup ID "
-                              "was in the recently updated lookup ID buffer "
-                              "(lookup ID = {})".format(new_cmd_dict["lookupID"]))
-                    else:
-                        print("[MultiprocessDbHandler]: Got new command:", new_cmd_dict)
+                MultiprocessDbHandler.db_new_commands_handler(db_collection,recently_updated_lookup_ids,new_command_output_queue)
 
-                        new_cmd = None
-                        if USING_IDL:
-                            cmd_cls = msg_utilities.NAME_TO_CLASS_MAP[new_cmd_dict["name"]]
-                            try:
-                                new_cmd = cmd_cls.from_database_object(new_cmd_dict)
-                            except TypeError as err:
-                                print("[MultiprocessDbHandler]: ERROR occurred when attempting to parse the database "
-                                      "object {} to the command class {}. Error: {}".format(new_cmd_dict,
-                                                                                            cmd_cls.__name__,
-                                                                                            err))
-                        else:
-                            new_cmd = command.Command.from_database(new_cmd_dict)
-
-                        if new_cmd:
-                            new_command_output_queue.put(new_cmd)
-
-                        # Finally, sleep for 0.2 seconds so that this loop runs at 5 Hz.
-                        time.sleep(0.2)
+                # Finally, sleep for 0.2 seconds so that this loop runs at 5 Hz.
+                time.sleep(0.2)
         finally:
             app_wide_shutdown_event.set()
             print("[MultiprocessDbHandler]: db interaction task exiting")
