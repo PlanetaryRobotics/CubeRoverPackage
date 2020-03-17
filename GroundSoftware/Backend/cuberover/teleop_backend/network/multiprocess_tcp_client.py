@@ -3,6 +3,11 @@ import select
 import socket
 
 from teleop_backend.utils import signal_utils
+import warnings
+
+class EmptyDataHandlerWarning(UserWarning):
+    """The warning used when data is received on the socket but there are no registered data handlers."""
+    pass
 
 class MultiprocessTcpClient:
     RECV_MAX_SIZE = 4096
@@ -38,7 +43,34 @@ class MultiprocessTcpClient:
     def register_data_handler(self, handler):
         self.__data_handlers.append(handler)
 
-    def send(self, data: bytes, flags=0):
+    @staticmethod
+    def send_data(sock: socket.socket, data: bytes, flags=0):
+        """Sends the given data using the given socket
+
+        Args:
+            sock: The socket with which this function will send the data
+            data: A list of data handlers, each of which will be given a copy of the data received by the socket.
+            flags: The flags you be passed to the underlying sendall() system call (set to 0 by default)
+
+        Returns:
+            True if data was successfully sent, or False if data unsucessfully sent.
+
+        Warns:
+            None
+
+        Raises:
+            IOError: If any errors occur during the sendall() system call.
+        """ 
+        print("[[MultiprocessTcpClient]: Attempting to send {} bytes of data".format(len(data)))
+        result = sock.sendall(data, flags)
+        if result is None:
+            print("[MultiprocessTcpClient]: Send successful")
+            return True
+        else:
+            print("[MultiprocessTcpClient]: Send unsuccessful, result={}".format(result))
+            return False
+
+    def send(self, data: bytes, flags=0): # assert_called_once_with
         print("[[MultiprocessTcpClient]: Attempting to send {} bytes of data".format(len(data)))
         result = self.__sock.sendall(data, flags)
         if result is None:
@@ -55,6 +87,38 @@ class MultiprocessTcpClient:
         except multiprocessing.TimeoutError:
             self.__recv_proc.terminate()
 
+    @staticmethod
+    def recv_data_from_socket(socket: socket.socket, data_handlers: list) -> bool:
+        """Receives data from the server with the given socket, then gives all data handlers a copy of that data.
+
+        If there is no data available to be received on the given socket, this function will block until data is received.
+
+        Args:
+            socket: The socket with which this function will receive data.
+            data_handlers: A list of data handlers, each of which will be given a copy of the data received by the socket.
+
+        Returns:
+            True if data was received, or False if the server closed the connection.
+
+        Warns:
+            EmptyDataHandlerWarning: If data is received on the socket when the data_handlers argument is empty.
+
+        Raises:
+            IOError: If any errors occur during the recv() system call.
+        """ 
+        chunk = socket.recv(MultiprocessTcpClient.RECV_MAX_SIZE)
+        if len(chunk) == 0:
+            print("[MultiprocessTcpClient]: Peer closed the connection")
+            return False
+        else:
+            print("[MultiprocessTcpClient]: Got {} bytes of data".format(len(chunk)))
+        if(len(data_handlers) == 0):
+            warnings.warn("The TCP client received data, but no data handlers have been registered to be \
+                given that data. The received data will be discarded.", EmptyDataHandlerWarning)
+        for d in data_handlers:
+            d.new_bytes(chunk)
+        return True
+        
     @staticmethod
     def recv_task(app_wide_shutdown_event,
                   this_client_shutdown_event,
