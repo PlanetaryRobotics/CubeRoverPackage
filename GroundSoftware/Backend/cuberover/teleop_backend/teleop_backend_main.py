@@ -29,9 +29,24 @@ else:
 def main():
     parser = argparse.ArgumentParser(description="Reads commands from database and sends them out")
     parser.add_argument("-a", "--address", type=str, required=True,
-                        help="The address to which the client should connect")
+                        help="The address of the YAMCS server command input data link.")
     parser.add_argument("-p", "--port", type=int, required=True,
-                        help="The port to which the client should connect")
+                        help="The port of the YAMCS server command input data link.")
+    parser.add_argument("--yamcs_username", type=str, required=True,
+                        help="The username of the credentials used to connect to the YAMCS server")
+    parser.add_argument("--yamcs_password", type=str, required=True,
+                        help="The password of the credentials used to connect to the YAMCS server")
+    parser.add_argument("--yamcs_instance", type=str, required=True,
+                        help="The name of the instance in the YAMCS server with which the teleop_backend interact.")
+    parser.add_argument("--yamcs_processor", type=str, required=True,
+                        help="The name of the processor (in the YAMCS instance with name given by `yamcs_instance`) "
+                             "with which the teleop_backend interacts.")
+    parser.add_argument("--yamcs_command", type=str, required=True,
+                        help="The name of the YAMCS command that is sent for all rover commands. The true names of "
+                             "our commands are prepended to the blob of binary data sent as the command argument")
+    parser.add_argument("--yamcs_parameter", type=str, required=True,
+                        help="The name of the paramter through which the YAMCS server makes available all data "
+                             "received from the rover.")
     parser.add_argument("-g", "--generated_file_directory", type=str, required=True,
                         help="The directory that contains the generated Python source files for the commands, events, "
                              "and telemetry channels defined within the F Prime distribution. It is expected that this "
@@ -52,6 +67,7 @@ def main():
     parser.add_argument("--response_command_name", type=str, required=False, default="Response",
                         help="The exact name of the command sent by the rover as a response to all of the commands"
                              " that it receives. If not specified, \"Response\" is used by default.")
+
     args = parser.parse_args()
 
     # Get the fprime and fprime_gds package directories, either from command line arguments or based on the expected
@@ -112,9 +128,15 @@ def main():
     from teleop_backend.pipeline import pipeline
     backend_pipeline = pipeline.Pipeline()
     backend_pipeline.build_pipeline(server_address=args.address,
-                                            server_port=args.port,
-                                            response_msg_name=args.response_command_name,
-                                            generated_file_directory_path=pathlib.Path(args.generated_file_directory))
+                                    server_port=args.port,
+                                    response_msg_name=args.response_command_name,
+                                    generated_file_directory_path=pathlib.Path(args.generated_file_directory),
+                                    yamcs_username=args.yamcs_username,
+                                    yamcs_password=args.yamcs_password,
+                                    yamcs_command_name=args.yamcs_command,
+                                    yamcs_instance=args.yamcs_instance,
+                                    yamcs_processor_name=args.yamcs_processor,
+                                    yamcs_feedback_parameter_name=args.yamcs_parameter)
 
     backend_pipeline.spin()
 

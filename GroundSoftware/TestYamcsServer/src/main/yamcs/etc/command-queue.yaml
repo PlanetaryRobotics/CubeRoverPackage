@@ -1,0 +1,20 @@
+example_dependent:
+  minLevel: warning
+  state: blocked
+  users:
+  - example
+example_hazardous:
+  minLevel: critical
+  state: blocked
+  users:
+  - example
+example_independent:
+  minLevel: none
+  state: enabled
+  users:
+  - example
+example_simple_udp:
+  minLevel: none
+  state: enabled
+  users:
+  - example

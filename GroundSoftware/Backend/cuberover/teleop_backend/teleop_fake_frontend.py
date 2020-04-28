@@ -86,7 +86,7 @@ def main():
     app_wide_shutdown_event = multiprocessing.Event()
     signal_utils.setup_signal_handler_for_process(shutdown_event=app_wide_shutdown_event)
     while not app_wide_shutdown_event.is_set():
-        wait_time_until_next = random.random() * 5.0
+        wait_time_until_next = 0.5 + (random.random() * 5.0)
         cmd_to_send = random.choice(cmds)
         cmd_to_send["lookupID"] = db.count() + 1
         db.write(copy.deepcopy(cmd_to_send))

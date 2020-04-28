@@ -1,0 +1,9 @@
+# Implicit user when security is _not_ enabled
+unauthenticatedUser:
+  username: admin
+  superuser: true
+
+authModules:
+  - class: org.yamcs.security.YamlAuthModule
+    args:
+      hasher: org.yamcs.security.PBKDF2PasswordHasher

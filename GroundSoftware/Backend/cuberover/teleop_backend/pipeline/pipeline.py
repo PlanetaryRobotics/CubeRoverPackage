@@ -27,7 +27,7 @@ from teleop_backend.fprime_gds_additions.common.decoders import cmd_decoder
 from teleop_backend.pipeline.consumers import event_consumer
 from teleop_backend.pipeline.consumers import command_consumer
 from teleop_backend.pipeline.consumers import telemetry_consumer
-from teleop_backend.network import multiprocess_tcp_client
+from teleop_backend.network import yamcs_client
 from teleop_backend.network import message_parsing_state_machine
 from teleop_backend.database import multiprocess_db_handler
 from teleop_backend.database import mongo_db_collection
@@ -42,6 +42,14 @@ _AllMessageDictionaries = typing.NamedTuple('_MessageDictionaries',
                                                 ('telemetry_id_dict', typing.Dict[int, ch_template.ChTemplate]),
                                                 ('telemetry_name_dict', typing.Dict[str, ch_template.ChTemplate])
                                             ])
+
+_CommandStateToDbState = {
+    yamcs_client.CommandState.SENT_TO_YAMCS: mongo_db_collection.MongoDbState.SUCC_SENT_TO_YAMCS,
+    yamcs_client.CommandState.QUEUED_BY_YAMCS: mongo_db_collection.MongoDbState.SUCC_QUEUED_BY_YAMCS,
+    yamcs_client.CommandState.RELEASED_BY_YAMCS: mongo_db_collection.MongoDbState.SUCC_RELEASED_BY_YAMCS,
+    yamcs_client.CommandState.SENT_BY_YAMCS: mongo_db_collection.MongoDbState.SUCC_SENT_BY_YAMCS,
+    yamcs_client.CommandState.REJECTED_BY_YAMCS: mongo_db_collection.MongoDbState.FAIL,
+}
 
 
 class Pipeline:
@@ -72,9 +80,9 @@ class Pipeline:
                                        update the command's status based on how those actions went.
         __application_wide_shutdown_event: The multiprocessing.Event used to signal the shutdown of all processes that
                                            are part of the pipeline.
-        __tcp_client: The TCP client, which contains a process that receives a stream of data from "Houston" and feeds
-                      the message parsing state machine. This object additionally provides a function to send data to
-                      "Houston", and this function is used by the "command from database sender" process.
+        __yamcs_client: The YAMCS client, through which we send commands to the YAMCS server. Additionally, this client
+                        subscribes to updates from the YAMCS parameter through which the server makes all data from the
+                        the rover available. The data from these updates is fed into the message parsing state machine.
         __db_handler_process: The database handler process.
         __command_from_database_sender_process: The "command from database sender" process, which consumes data objects
                                                 from the __new_command_output_queue, serializes them, then sends them
@@ -98,7 +106,7 @@ class Pipeline:
         self.__application_wide_shutdown_event = None
 
         # Our subprocesses
-        self.__tcp_client = None
+        self.__yamcs_client = None
         self.__db_handler_process = None
         self.__command_from_database_sender_process = None
         self.__message_parser_pump_process = None
@@ -107,7 +115,13 @@ class Pipeline:
                        server_address: str,
                        server_port: int,
                        response_msg_name: str,
-                       generated_file_directory_path: pathlib.Path):
+                       generated_file_directory_path: pathlib.Path,
+                       yamcs_username: str,
+                       yamcs_password: str,
+                       yamcs_command_name: str,
+                       yamcs_instance: str,
+                       yamcs_processor_name: str,
+                       yamcs_feedback_parameter_name: str):
         """Constructs all pipeline objects and queues and connects them, then starts all pipeline processes.
 
         For more details about the pipeline see the class description.
@@ -119,6 +133,15 @@ class Pipeline:
             generated_file_directory_path: The path of the root directory containing generated python dictionary files.
                                            This directory should contain directories called "channels", "commands", and
                                            "events".
+            yamcs_username: The username of the credentials used to connect to the YAMCS server.
+            yamcs_password: The password of the credentials used to connect to the YAMCS server.
+            yamcs_command_name: The "name" of the YAMCS command that is sent for all of our commands. The true names of
+                                our commands are prepended to the blob of binary data sent as the command argument.
+            yamcs_instance: The name of the instance in the YAMCS server with which we interact.
+            yamcs_processor_name: The name of the processor (in the YAMCS instance with name given by `yamcs_instance`)
+                                  with which we interact.
+            yamcs_feedback_parameter_name: The name of the paramter through which the YAMCS server makes available all
+                                           data received from the rover.
 
         Returns:
             None
@@ -146,8 +169,17 @@ class Pipeline:
                                                         all_msg_dicts.telemetry_id_dict)
 
         # Create then start all of our processes
-        self.__create_all_processes(decoder_dict, all_msg_dicts.command_id_dict, response_opcode)
-        self.__start_all_processes(server_address, server_port)
+        self.__create_all_processes(decoder_dict,
+                                    all_msg_dicts.command_id_dict,
+                                    response_opcode,
+                                    yamcs_username,
+                                    yamcs_password,
+                                    yamcs_command_name)
+        self.__start_all_processes(server_address,
+                                   server_port,
+                                   yamcs_instance,
+                                   yamcs_processor_name,
+                                   yamcs_feedback_parameter_name)
 
     def __get_message_dictionaries(self, generated_file_directory_path: pathlib.Path) -> _AllMessageDictionaries:
         """Loads all message types from the F Prime Python dictionary files and stores them in maps by opcode and name.
@@ -248,7 +280,10 @@ class Pipeline:
     def __create_all_processes(self,
                                decoder_dict: typing.Dict[data_desc_type.DataDescType, decoder.Decoder],
                                command_id_dict: typing.Dict[int, cmd_template.CmdTemplate],
-                               response_opcode: int) -> None:
+                               response_opcode: int,
+                               yamcs_username: str,
+                               yamcs_password: str,
+                               yamcs_command_name: str) -> None:
         """Instantiates all of the multiprocessing process object instance variables, but does not start them.
 
         Args:
@@ -256,6 +291,10 @@ class Pipeline:
                           the decoder object that is appropriate for decoding that kind of message.
             command_id_dict: A map from command opcodes to the corresponding command templates.
             response_opcode: The opcode of the response command.
+            yamcs_username: The username of the credentials used to connect to the YAMCS server.
+            yamcs_password: The password of the credentials used to connect to the YAMCS server.
+            yamcs_command_name: The "name" of the YAMCS command that is sent for all of our commands. The true names of
+                                our commands are prepended to the blob of binary data sent as the command argument.
 
         Returns:
             None
@@ -265,9 +304,12 @@ class Pipeline:
 
         msg_parser = message_parsing_state_machine.MessageParsingStateMachine()
         msg_parser.register_completed_message_queue(completed_message_queue=self.__received_serialized_msg_queue)
-        self.__tcp_client = multiprocess_tcp_client.MultiprocessTcpClient(
+        self.__yamcs_client = yamcs_client.YamcsClient(
+            yamcs_username=yamcs_username,
+            yamcs_password=yamcs_password,
+            yamcs_command_name=yamcs_command_name,
             application_wide_shutdown_event=self.__application_wide_shutdown_event)
-        self.__tcp_client.register_data_handler(handler=msg_parser)
+        self.__yamcs_client.register_data_handler(handler=msg_parser)
 
         self.__message_parser_pump_process = \
             MultiprocessingRunner(task_name="message_parsing_state_machine_pump",
@@ -290,14 +332,24 @@ class Pipeline:
                                   function_args=[self.__new_command_output_queue,
                                                  self.__command_status_update_queue,
                                                  the_cmd_encoder,
-                                                 self.__tcp_client])
+                                                 self.__yamcs_client])
 
-    def __start_all_processes(self, server_address: str, server_port: int) -> None:
-        """Starts all of the instance processes, retrying TCP connection until it is successful.
+    def __start_all_processes(self,
+                              server_address: str,
+                              server_port: int,
+                              yamcs_instance: str,
+                              yamcs_processor_name: str,
+                              yamcs_feedback_parameter_name: str) -> None:
+        """Starts all of the instance processes, retrying connection to the YAMCS server until it is successful.
 
         Args:
             server_address: The IP address of the "Houston" server.
             server_port: The port number of the "Houston" server.
+            yamcs_instance: The name of the instance in the YAMCS server with which we interact.
+            yamcs_processor_name: The name of the processor (in the YAMCS instance with name given by `yamcs_instance`)
+                                  with which we interact.
+            yamcs_feedback_parameter_name: The name of the paramter through which the YAMCS server makes available all
+                                           data received from the rover.
 
         Returns:
             None
@@ -305,14 +357,18 @@ class Pipeline:
         try:
             while not self.__application_wide_shutdown_event.is_set():
                 try:
-                    self.__tcp_client.connect(address=server_address, port=server_port)
+                    self.__yamcs_client.connect(address=server_address,
+                                                port=server_port,
+                                                yamcs_instance=yamcs_instance,
+                                                yamcs_processor=yamcs_processor_name,
+                                                yamcs_feedback_parameter_name=yamcs_feedback_parameter_name)
                     break
                 except Exception as e:
                     print("Failed to connect to server due to {}, "
                           "will wait 5 seconds then retry connection".format(e), file=sys.stderr)
                     time.sleep(5)
         except KeyboardInterrupt:
-            print("Building of pipeline exiting because of Ctrl-C while trying to connect to TCP server")
+            print("Building of pipeline exiting because of Ctrl-C while trying to connect to YAMCS server")
             self.__application_wide_shutdown_event.set()
             return
 
@@ -328,6 +384,8 @@ class Pipeline:
         Returns:
             None
         """
+        signal_utils.setup_signal_handler_for_process(shutdown_event=self.__application_wide_shutdown_event)
+
         # This will block until we exit.
         while not self.__application_wide_shutdown_event.is_set():
             time.sleep(0.25)
@@ -336,37 +394,43 @@ class Pipeline:
     def send_cmd_from_db(new_command_output_queue: multiprocessing.Queue,
                          command_status_update_queue: multiprocessing.Queue,
                          the_cmd_encoder: cmd_encoder.CmdEncoder,
-                         tcp_client: multiprocess_tcp_client.MultiprocessTcpClient):
+                         the_yamcs_client: yamcs_client.YamcsClient):
         """The function of a process that retrieves converted commands from the database and sends them.
 
         More specifically, this is a function set up to be used with MultiprocessingRunner. Each invocation of this
         function attempts to retrieve one command from the new command output queue (which contains tuples of the
         lookup ID and the F Prime command data object for a command retrieved from the database), serialize it,
-        prepend the header and destination string, then send it to the rover via the TCP client.
+        prepend the header, destination string, and command name, then send it to the Astrobotics AMCC YAMCS server via
+        the YAMCS client.
 
         In addition to the above, this task will send a StatusUpdate back to the database via the command status update
         queue. This StatusUpdate will be sent even if serializing or sending the command fails (though in these cases
-        the contents of the update will obviously be different from that when these things succeed).
-
-        If there are no new commands from the database on the queue, this task will simply time out after half of a
-        second and return
+        the contents of the update will obviously be different from that when these things succeed). This function will
+        also frequently call the get_command_updates() function of the YamcsClient in order to get any updates about the
+        status of commands within the YAMCS server, and then will create StatusUpdates to update the database
+        accordingly.
         """
         try:
-            lookup_id, cmd_from_db_data_object = new_command_output_queue.get(block=True, timeout=0.5)
-            opcode = cmd_from_db_data_object.get_template().get_op_code()
+            lookup_id, cmd_from_db_data_object = new_command_output_queue.get(block=True, timeout=0.001)
+            template = cmd_from_db_data_object.get_template()
+            opcode = template.get_op_code()
+            cmd_name = template.get_name()
+            cmd_name_bytes = cmd_name.encode(encoding="utf-8")
 
             update = None
             try:
                 serialized_cmd_bytes = the_cmd_encoder.encode_api(cmd_from_db_data_object)
-                full_serialized_cmd_bytes = b"A5A5 FSW %s" % serialized_cmd_bytes
-                tcp_client.send(full_serialized_cmd_bytes)
+                full_serialized_cmd_bytes = b"%sA5A5 FSW %s" % (cmd_name_bytes, serialized_cmd_bytes)
+                print("Sending bytes: \"{}\"".format(full_serialized_cmd_bytes))
+                cmd_update = the_yamcs_client.send(full_serialized_cmd_bytes, lookup_id=lookup_id, opcode=opcode)
 
-                update = multiprocess_db_handler.StatusUpdate(lookup_id=lookup_id,
-                                                              cmd_opcode=opcode,
-                                                              new_state=mongo_db_collection.MongoDbState.SUCC_SENT)
+                update = \
+                    multiprocess_db_handler.StatusUpdate(lookup_id=lookup_id,
+                                                         cmd_opcode=opcode,
+                                                         new_state=mongo_db_collection.MongoDbState.SUCC_SENT_TO_YAMCS)
             except Exception as err:
                 print("[send_cmd_from_db]: Sending {} failed due to error:"
-                      " {}".format(cmd_from_db_data_object.get_name(), err))
+                      " {}".format(cmd_name, err))
                 update = multiprocess_db_handler.StatusUpdate(
                     lookup_id=lookup_id,
                     cmd_opcode=opcode,
@@ -380,6 +444,27 @@ class Pipeline:
                     command_status_update_queue.put(update)
         except queue.Empty:
             pass
+
+        # After checking for new commands, handle any changes to command statuses
+        command_updates = the_yamcs_client.get_command_updates()
+
+        for update in command_updates:
+            err_str = None
+            if update.new_state == yamcs_client.CommandState.REJECTED_BY_YAMCS:
+                err_str = "Failed to send due to error: {}".format(update.err_message_if_rejected)
+
+            status_update = multiprocess_db_handler.StatusUpdate(
+                lookup_id=update.lookup_id,
+                cmd_opcode=update.opcode,
+                new_state=_CommandStateToDbState[update.new_state],
+                err_string=err_str)
+
+            print("[send_cmd_from_db]: Writing status update for lookup id {}:"
+                  " {} (transition from {} to {})".format(status_update.lookup_id,
+                                                          status_update.get_update_dict(),
+                                                          update.old_state.name,
+                                                          update.new_state.name))
+            command_status_update_queue.put(status_update)
 
     @staticmethod
     def transfer_msg_from_parser_queue_to_decoder(received_serialized_message_queue: multiprocessing.Queue,

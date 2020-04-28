@@ -3,8 +3,6 @@
 - The teleoperation backend requires Python 3.5 or newer in order to run.
 - In these instructions, the root of the CubeRoverPackage repository will be referred to as `<ROOT>`, `<ROOT>/GroundSoftware/Backend` will be referred to as `<BACKEND_ROOT>`, and `<ROOT>/FlightSoftware/Apps/fprime` will be referred to as `<FPRIME_ROOT>`
 ### Set-up
-
-
 1. Change directory to `<BACKEND_ROOT>`
 2. Install the prerequisite Python packages:
     ```
@@ -40,25 +38,41 @@
         13. `cd CubeRover`
         14. `make TIR4`
         15. Note that it is OK and currently expected for the final `make` command to end in an error. What's important is to verify that inside of the current directory (which should be `CubeRover`), there should now be a directory named `py_dict`, and inside of that directory there should be three more directories: `channels`, `commands`, and `events`. Finally, the `py_dict/commands` directory should contain at least `Navigation.py` and `Response.py`.
-
+5. Install prerequisites for running the YAMCS test server:
+   ```bash
+   sudo apt update && sudo apt install -y openjdk-8-jre-headless maven
+   ```
 ### Back-end verification
-Verifying the back-end requires three terminals. In all three terminals, the current working directory should be `<BACKEND_ROOT>`.
-1. In the first terminal, start the teleop_fake_server:
+Verifying the back-end requires four terminals. In all four terminals, the current working directory should be `<BACKEND_ROOT>`.
+1. In the first terminal, start the test YAMCS server:
+    ```bash
+    ./start_test_yamcs_server.sh
     ```
-    python3 cuberover/teleop_backend/teleop_fake_server.py --address 127.0.0.1 --port 5001 --generated_file_directory "../../FlightSoftware/Apps/fprime/CubeRover/py_dict"
+2. In the second terminal, start the teleop_fake_rover:
+    ```bash
+    python3 cuberover/teleop_backend/teleop_fake_rover.py --server-address 127.0.0.1 --server-port 10025 --response-port 10015 --generated_file_directory "../../FlightSoftware/Apps/fprime/CubeRover/py_dict"
     ```
-2. In the second terminal, start the teleop_backend:
+3. In the third terminal, start the teleop_backend:
+    ```bash
+    python3 cuberover/teleop_backend/teleop_backend_main.py \
+        --address 127.0.0.1 \
+        --port 8090 \
+        --yamcs_username "example" \
+        --yamcs_password "justanexample" \
+        --yamcs_instance "Astrobotic-M1" \
+        --yamcs_processor "realtime" \
+        --yamcs_command "/Astrobotic-M1/simple-udp-example-tc" \
+        --yamcs_parameter "/Astrobotic-M1/simple-udp-example-payload-tm" \
+        --generated_file_directory "../../FlightSoftware/Apps/fprime/CubeRover/py_dict"
     ```
-    python3 cuberover/teleop_backend/teleop_backend_main.py --address 127.0.0.1 --port 5001 --generated_file_directory "../../FlightSoftware/Apps/fprime/CubeRover/py_dict"
-    ```
-3. In the third terminal, start the teleop_fake_frontend:
-    ```
+4. In the fourth terminal, start the teleop_fake_frontend:
+    ```bash
     python3 cuberover/teleop_backend/teleop_fake_frontend.py
     ```
-4. With all three of these commands running, you should be seeing activity in all three terminals:
+5. With all three of these commands running, you should be seeing activity in all three terminals:
     - The terminal running `teleop_fake_frontend.py` will be spitting out the commands it is writing to the database
     - The terminal running `teleop_backend_main.py` will be spitting out updates as it pulls commands from the database, sends them out over TCP, and then writes status updates back to the database
-    - The terminal running `teleop_fake_server.py` will be spitting out how many bytes it receives when it reads data from it's TCP port, the parsed command it received, and whether sending the Response was successful.
+    - The terminal running `teleop_fake_rover.py` will be spitting out how many bytes it receives when it reads data from it's UDP port, the parsed command it received, and whether sending the Response was successful.
 
 Note that the `python3` command might not exist on your machine, particularly if you're running on Windows. In that case, confirm you have python 3.5 or newer installed by running `python --version`, and if that's the case then you can just replace `python3` in the above commands with `python`. If not, you need to install python 3.5 or newer.
 
@@ -75,7 +89,6 @@ Note that the `python3` command might not exist on your machine, particularly if
     - The "DbHandler" process is performed by `DbHandlerProcess.db_interaction_task`, which is located in the file `<BACKEND_ROOT>/cuberover/teleop_backend/database/multiprocess_db_handler.py`
     - The "Command From Database Sender" process is performed by `Pipeline.send_cmd_from_db` called repeatedly using a `Pipeline.MultiprocessingRunner`, both of which are located in the file `<BACKEND_ROOT>/cuberover/teleop_backend/pipeline/pipeline.py`
     - The "Message Parser Pump" process is performed by `Pipeline.transfer_msg_from_parser_queue_to_decoder` called repeatedly using a `Pipeline.MultiprocessingRunner`, both of which are located in the file `<BACKEND_ROOT>/cuberover/teleop_backend/pipeline/pipeline.py`
-    - The "TCP Client" process is performed by `MultiprocessTcpClient.recv_task` which is located in the file `<BACKEND_ROOT>/cuberover/teleop_backend/network/multiprocess_tcp_client.py`
 - The circled classes in the diagram represent the following classes in the code:
     - "Command Encoder" represents the class `CmdEncoder`, which is located in the file `<FPRIME_ROOT>/Gds/src/fprime_gds/common/encoders/cmd_encoder.py`
     - "Event Decoder" represents the class `EventDecoder`, which is located in the file `<FPRIME_ROOT>/Gds/src/fprime_gds/common/decoders/event_decoder.py`
@@ -85,4 +98,5 @@ Note that the `python3` command might not exist on your machine, particularly if
     - "Telemetry Consumer" represents the class `TelemetryConsumer`, which is located in the file `<BACKEND_ROOT>/cuberover/teleop_backend/pipeline/consumers/telemetry_consumer.py`
     - "Command Consumer" represents the class `CommandConsumer`, which is located in the file `<BACKEND_ROOT>/cuberover/teleop_backend/pipeline/consumers/command_consumer.py`
     - "Message Parsing State Machine" represents the class `MessageParsingStateMachine`, which is located in the file `<BACKEND_ROOT>/cuberover/teleop_backend/network/message_parsing_state_machine.py`
+    - The "YAMCS Client" represents the class `YamcsClient` which is located in the file `<BACKEND_ROOT>/cuberover/teleop_backend/network/yamcs_client.py`
 

@@ -4,12 +4,12 @@
 import multiprocessing
 import pathlib
 import queue
+import select
+import socket
+import struct
 import sys
 import time
 import typing
-
-import select
-import socket
 
 # fprime imports
 from fprime_gds.common.loaders import ch_py_loader
@@ -45,17 +45,17 @@ class FakeRoverPipeline:
     then create a Response message, serialize it, and send it back to the backend.
 
     Specifically, this pipeline doesn't need the database handler or the process to send messages from the data handler.
-    Instead, it needs a TCP server (which is implemented within this class) that feeds the message parsing state
+    Instead, it needs a UDP server (which is implemented within this class) that feeds the message parsing state
     machine. As with the backend pipeline, the data goes from the message parsing state machine to decoders and then to
     consumers, the output of which is database-formatted objects. In the backend pipeline the launching process ends up
     spinning doing nothing and waiting for the other processes to end. However, in this pipeline the launching process
     takes the output of the consumers, generates a Response message in database format indicating the success of the
     received command, then converts that Response message to a command object and then serialized data, and finally
-    puts that data onto a queue to be sent as part of the TCP server process. That completes the loop back from received
+    puts that data onto a queue to be sent as part of the UDP server process. That completes the loop back from received
     command to sent response.
 
     Attributes:
-        __server_proc: The TCP server process.
+        __server_proc: The UDP server process.
         All others are identical to attributes of pipeline.Pipeline, look at the documentation there for more details.
     """
 
@@ -79,8 +79,9 @@ class FakeRoverPipeline:
         self.__server_proc = None
 
     def build_pipeline(self,
-                       address: str,
-                       port: int,
+                       server_address: str,
+                       server_port: int,
+                       response_port: int,
                        response_msg_name: str,
                        generated_file_directory_path: pathlib.Path):
         """Constructs all pipeline objects and queues and connects them, then starts all pipeline processes.
@@ -88,8 +89,11 @@ class FakeRoverPipeline:
         For more details about the pipeline see the class description.
 
         Args:
-            address: The IP address to which the TCP server of this "rover" pipeline will bind.
-            port: The port number o which the TCP server of this "rover" pipeline will bind.
+            server_address: The IP address to which the UDP server socket of this "rover" pipeline will bind.
+            server_port: The port number to which the UDP server socket of this "rover" pipeline will bind.
+            response_port: The port number to which the UDP server socket of this "rover" pipeline will send data. The
+                           destination address will consist of the host from the client that send the command and this
+                           port.
             response_msg_name: The name of the response message.
             generated_file_directory_path: The path of the root directory containing generated python dictionary files.
                                            This directory should contain directories called "channels", "commands", and
@@ -114,7 +118,7 @@ class FakeRoverPipeline:
 
         if response_msg_name not in command_name_dict:
             raise ValueError("Response message name ({}) is not in dictionary of command names (dictionary keys: "
-                               "{})".format(response_msg_name, list(command_name_dict.keys())))
+                             "{})".format(response_msg_name, list(command_name_dict.keys())))
 
         self.__response_opcode = command_name_dict[response_msg_name].get_op_code()
 
@@ -180,8 +184,9 @@ class FakeRoverPipeline:
         self.__server_proc = multiprocessing.Process(target=FakeRoverPipeline.server_recv_task,
                                                      name="teleop_fake_server_recv_task",
                                                      args=(self.__application_wide_shutdown_event,
-                                                           address,
-                                                           port,
+                                                           server_address,
+                                                           server_port,
+                                                           response_port,
                                                            SERVER_SELECT_TIMEOUT,
                                                            msg_parser,
                                                            self.__send_queue))
@@ -305,20 +310,23 @@ class FakeRoverPipeline:
 
     @staticmethod
     def server_recv_task(shutdown_event: multiprocessing.Event,
-                         address: str,
-                         port: int,
+                         server_address: str,
+                         server_port: int,
+                         response_port: int,
                          select_timeout: float,
                          data_handler: message_parsing_state_machine.MessageParsingStateMachine,
                          send_queue: multiprocessing.Queue) -> None:
-        """A TCP server that receives a connection from a client (presumably the backend) and communicates with it.
+        """A UDP server that receives a connection from a client (presumably the backend) and communicates with it.
 
         This server feeds the given message parsing state machine with received data, and also pulls bytes to send out
         of the given send queue and then sends them to the client.
 
         Args:
             shutdown_event: The event to signal the shutdown of this process.
-            address: The address to which this server will bind.
-            port: The port to which this server will bind
+            server_address: The address to which this server will bind.
+            server_port: The port to which this server will bind.
+            response_port: The port to which data from this server will be sent (the address from the client will be
+                           used).
             select_timeout: The timeout of the select call that waits for input on our socket.
             data_handler: The message parsing state machine to be fed with new received data.
             send_queue: The queue from which bytes to be sent to the client will be pulled.
@@ -330,45 +338,43 @@ class FakeRoverPipeline:
         try:
             signal_utils.setup_signal_handler_for_process(shutdown_event=shutdown_event)
 
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind((address, port))
-            sock.settimeout(1)
-            sock.listen(1)
+            server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            server_sock.bind((server_address, server_port))
+            server_sock.settimeout(1)
+            client_recv_address = None
             while not shutdown_event.is_set():
                 try:
                     # Clear any old messages from the queue before accepting a new client connection
                     while not send_queue.empty():
                         send_queue.get_nowait()
 
-                    conn, addr = sock.accept()
-                    with conn:
-                        print('Connection from', addr)
-                        while not shutdown_event.is_set():
-                            ready = select.select([conn], [], [conn], select_timeout)
-                            if ready[0]:
-                                chunk = conn.recv(RECV_MAX_SIZE)
-                                if len(chunk) == 0:
-                                    print("Peer closed the connection")
-                                    break
-                                else:
-                                    print("Got {} bytes of data".format(len(chunk)))
-                                data_handler.new_bytes(chunk)
-                            elif ready[2]:
-                                break
+                    while not shutdown_event.is_set():
+                        ready = select.select([server_sock], [], [server_sock], select_timeout)
+                        if ready[0]:
+                            data, client_send_address = server_sock.recvfrom(RECV_MAX_SIZE)
+                            client_recv_address = (client_send_address[0], response_port)
+                            print("Got {} bytes of data from {}".format(len(data), client_send_address))
+                            if len(data) > 0:
+                                data_handler.new_bytes(data)
+                        elif ready[2]:
+                            break
 
-                            try:
-                                msg_bytes_to_send = send_queue.get(block=False)
-                                result = conn.sendall(msg_bytes_to_send, 0)
+                        try:
+                            msg_bytes_to_send = send_queue.get(block=False)
 
-                                if result is None:
-                                    print("[server_recv_task]: Send successful")
-                                else:
-                                    print("[server_recv_task]: Send unsuccessful, result={}".format(result))
-                            except queue.Empty:
-                                pass
+                            assert client_recv_address is not None, \
+                                "client_recv_address should always be set when we try to send"
 
-                        print("Disconnected")
+                            result = server_sock.sendto(msg_bytes_to_send, 0, client_recv_address)
+
+                            if result == len(msg_bytes_to_send):
+                                print("[server_recv_task]: Send successful")
+                            else:
+                                print("[server_recv_task]: Send unsuccessful, num sent bytes = {}".format(result))
+
+                        except queue.Empty:
+                            pass
                 except socket.timeout:
                     pass
         finally:

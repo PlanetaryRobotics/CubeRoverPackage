@@ -26,7 +26,7 @@ else:
 
 
 def main():
-    """A fake "rover" that acts as a TCP server for the backend to connect to and responds to commands.
+    """A fake "rover" that acts as a UDP server for the backend to connect to and responds to commands.
 
     Specifically, this fake "rover" will send a Response message indicating success for every command it receives from
     the backend. The data flow within this fake rover work similar to the backend itself but a bit simpler and in
@@ -34,10 +34,12 @@ def main():
     then create a Response message, serialize it, and send it back to the backend.
     """
     parser = argparse.ArgumentParser(description="Acts as a fake receiver and prints the commands it receives")
-    parser.add_argument("-a", "--address", type=str, required=True,
-                        help="The address to which the client should connect")
-    parser.add_argument("-p", "--port", type=int, required=True,
-                        help="The port to which the client should connect")
+    parser.add_argument("-a", "--server-address", type=str, required=True,
+                        help="The address to which the server socket will bind messages")
+    parser.add_argument("-p", "--server-port", type=int, required=True,
+                        help="The port to which the server socket will bind and receive messages")
+    parser.add_argument("-r", "--response-port", type=int, required=True,
+                        help="The port to which the server should send responses (client address will be used)")
     parser.add_argument("-g", "--generated_file_directory", type=str, required=True,
                         help="The directory that contains the generated Python source files for the commands, events, "
                              "and telemetry channels defined within the F Prime distribution. It is expected that this "
@@ -114,8 +116,9 @@ def main():
 
     from teleop_backend import teleop_fake_rover_pipeline
     rover_pipeline = teleop_fake_rover_pipeline.FakeRoverPipeline()
-    rover_pipeline.build_pipeline(address=args.address,
-                                  port=args.port,
+    rover_pipeline.build_pipeline(server_address=args.server_address,
+                                  server_port=args.server_port,
+                                  response_port=args.response_port,
                                   response_msg_name=args.response_command_name,
                                   generated_file_directory_path=pathlib.Path(args.generated_file_directory))
 
