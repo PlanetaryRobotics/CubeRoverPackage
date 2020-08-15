@@ -31,6 +31,6 @@
     "redis": "2.7.1",
     "sprintf-js": "^1.1.1",
     "text": "github:requirejs/text",
-    "ws": "2.2.2"
+    "ws": "7.3.1"
   }
 }
