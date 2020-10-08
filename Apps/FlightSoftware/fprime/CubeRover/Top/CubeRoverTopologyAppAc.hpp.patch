@@ -1,0 +1,25 @@
+--- CubeRoverTopologyAppAc.hpp	2020-09-28 17:58:46.310851294 -0700
++++ CubeRoverTopologyAppAc.hpp.bak	2020-09-28 18:01:46.347818934 -0700
+@@ -16,14 +16,14 @@
+ extern Fw::SimpleObjRegistry simpleReg;
+ 
+ // Component declarations
+-extern Drv::BlockDriverImpl blockDriver("blockDriver");
+-extern Svc::RateGroupDriverImpl rateGroupDriver("rateGroupDriver");
+-extern Svc::ActiveRateGroupImpl rateGroupLowFreq("rateGroupLowFreq");
+-extern Svc::ActiveRateGroupImpl rateGroupMedFreq("rateGroupMedFreq");
+-extern Svc::ActiveRateGroupImpl rateGroupHiFreq("rateGroupHiFreq");
+-extern Svc::CubeRoverTimeImpl cubeRoverTime("cubeRoverTime");
+-extern Svc::TlmChanImpl tlmChan("tlmChan");
+-extern Svc::CommandDispatcherImpl cmdDispatcher("cmdDispatcher");
++extern Drv::BlockDriverImpl blockDriver;
++extern Svc::RateGroupDriverImpl rateGroupDriver;
++extern Svc::ActiveRateGroupImpl rateGroupMedFreq;
++extern Svc::ActiveRateGroupImpl rateGroupLowFreq;
++extern Svc::ActiveRateGroupImpl rateGroupHiFreq;
++extern Svc::CubeRoverTimeImpl cubeRoverTime;
++extern Svc::TlmChanImpl tlmChan;
++extern Svc::CommandDispatcherImpl cmdDispatcher;
+ 
+ 
+ 

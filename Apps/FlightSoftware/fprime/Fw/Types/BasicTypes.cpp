@@ -12,7 +12,7 @@
 
 #include <Fw/Types/BasicTypes.hpp>
 
-#ifdef __VXWORKS__ // VxWorks doesn't have strnlen
+#if defined __VXWORKS__ || defined __TI_ARM__ // Neither VxWorks nor TI ARM have strnlen
 NATIVE_INT_TYPE strnlen(const char *s, NATIVE_INT_TYPE maxlen) {
     // walk buffer looking for NULL
     for (NATIVE_INT_TYPE index = 0; index < maxlen; index++) {

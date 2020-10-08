@@ -8,6 +8,7 @@
 #ifndef F_PRIME_CUBEROVER_TOP_TOPOLOGY_HPP_
 #define F_PRIME_CUBEROVER_TOP_TOPOLOGY_HPP_
 
+#include "Components.hpp"
 #include "CubeRoverTopologyAppAc.hpp"
 
 /**

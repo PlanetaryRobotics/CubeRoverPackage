@@ -22,7 +22,9 @@ SRC_RASPIAN = LinuxTimeImpl.cpp
 
 SRC_TIR4 = CubeRoverTimeImpl.cpp
 
-HDR = LinuxTimeImpl.hpp
+SRC = CubeRoverTimeComponentAi.xml
+
+HDR = CubeRoverTimeImpl.hpp
 
 SUBDIRS = test
 

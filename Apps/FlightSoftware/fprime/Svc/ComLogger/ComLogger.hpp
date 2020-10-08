@@ -14,6 +14,10 @@
 #include <Utils/Hash/Hash.hpp>
 
 #include <limits.h>
+#ifdef __TI_ARM__   // TI ARM doesn't define limits.h
+#define NAME_MAX 255
+#define PATH_MAX 4096
+#endif
 #include <stdio.h>
 #include <cstdarg>
 

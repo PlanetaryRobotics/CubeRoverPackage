@@ -1,10 +1,12 @@
 #include <Os/Task.hpp>
 #include <Os/Log.hpp>
 #include <HAL/include/FreeRTOS.h>
+#include <Include/CubeRoverConfig.hpp>      // PrimaryFlightController/FlightMCU
 
-#include "CubeRoverConfig.hpp"
 #include "Topology.hpp"
-#include "Components.hpp"
+
+
+
 
 // ---------------------------------------------------------------------------
 // Block Driver Component
@@ -77,6 +79,8 @@ Svc::CommandDispatcherImpl cmdDispatcher(
         "CmdDispatcher"
 #endif
 );
+
+
 
 /**
  * @brief      Run 1 cycle (debug)

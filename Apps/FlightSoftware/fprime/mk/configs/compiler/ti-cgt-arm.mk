@@ -32,6 +32,7 @@ CFLAGS := 	-mv7R4 \
 			--abi=eabi \
 			--preproc_with_compile \
 			--verbose_diagnostics \
+			--little_endian \
 			$(CCS_CFLAGS_COMMON) \
 			$(CCS_CXXFLAGS_COMMON) \
 			-I$(BUILD_ROOT) -I$(TI_ARM_COMPILER_INCLUDE_LOC) \

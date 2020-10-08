@@ -7,7 +7,7 @@
 <!-- Services -->
   <import_component_type>Svc/RateGroupDriver/RateGroupDriverComponentAi.xml</import_component_type>
   <import_component_type>Svc/ActiveRateGroup/ActiveRateGroupComponentAi.xml</import_component_type>
-  <import_component_type>Svc/Time/TimeComponentAi.xml</import_component_type>
+  <import_component_type>Svc/LinuxTime/CubeRoverTimeComponentAi.xml</import_component_type>
   <import_component_type>Svc/TlmChan/TlmChanComponentAi.xml</import_component_type>
   <import_component_type>Svc/CmdDispatcher/CommandDispatcherComponentAi.xml</import_component_type>
 
@@ -21,7 +21,7 @@
   <instance namespace="Svc" name="rateGroupHiFreq" type="ActiveRateGroup" base_id="81" base_id_window="20" />
 
 <!-- Declaration of time component that will be used by other module to capture time stamp -->
-  <instance namespace="Svc" name="cubeRoverTime" type="Time" base_id="101"  base_id_window="20" />
+  <instance namespace="Svc" name="cubeRoverTime" type="CubeRoverTime" base_id="101"  base_id_window="20" />
 
 <!-- Declaration of telemetric chan that gathers all telemetric parameters (synchronous, synchronized by rate group low freq) -->
   <instance namespace="Svc" name="tlmChan" type="TlmChan" base_id="121"  base_id_window="20" />
@@ -78,25 +78,21 @@
      ********************************************************************************************************* 
       -->
 
-  <!-- Connection of time between cubeRoverTime and rate group low-frequency component --> 
   <connection name = "rgLowFreq_to_cubeRoverTime">
     <source component = "rateGroupLowFreq" port = "Time" type = "Time" num = "0" />
     <target component = "cubeRoverTime" port = "timeGetPort" type = "Time" num = "0"/>
   </connection>
 
-  <!-- Connection of time between cubeRoverTime and rate group medium-frequency component --> 
   <connection name = "rgMedFreq_to_cubeRoverTime">
     <source component = "rateGroupMedFreq" port = "Time" type = "Time" num = "0" />
     <target component = "cubeRoverTime" port = "timeGetPort" type = "Time" num = "0"/>
   </connection>  
 
-  <!-- Connection of time between cubeRoverTime and rate group  high-frequency component --> 
   <connection name = "rgHiFreq_to_cubeRoverTime">
     <source component = "rateGroupHiFreq" port = "Time" type = "Time" num = "0" />
     <target component = "cubeRoverTime" port = "timeGetPort" type = "Time" num = "0"/>
   </connection>
 
-  <!-- Connection of time between cubeRoverTime and block driver --> 
   <connection name = "blockDriver_to_cubeRoverTime">
     <source component = "blockDriver" port = "Time" type = "Time" num = "0" />
     <target component = "cubeRoverTime" port = "timeGetPort" type = "Time" num = "0"/>

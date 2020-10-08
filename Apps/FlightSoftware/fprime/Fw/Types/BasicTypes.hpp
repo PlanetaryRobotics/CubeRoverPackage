@@ -115,8 +115,8 @@ typedef float   F32; //!< 32-bit floating point
 #define PRIVATE private //!< overridable private for unit testing
 #endif
 
-// Not ideal, but VxWorks doesn't have strnlen
-#ifdef __VXWORKS__
+// Not ideal, but neither VxWorks nor TI ARM have strnlen
+#if defined __VXWORKS__ || defined __TI_ARM__ 
 NATIVE_INT_TYPE strnlen(const char *s, NATIVE_INT_TYPE maxlen);
 #endif
 

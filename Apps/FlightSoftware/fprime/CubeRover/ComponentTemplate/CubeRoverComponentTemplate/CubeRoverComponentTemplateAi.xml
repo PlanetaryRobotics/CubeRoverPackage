@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?oxygen RNGSchema="file:../xml/ISF_Component_Schema.rnc" type="compact"?>
+
+<component name="{{ COMPONENT_NAME }}" kind="passive" namespace="{{ NAMESPACE }}">
+    <!--<import_port_type>Svc/Sched/SchedPortAi.xml</import_port_type>
+        <import_dictionary>Drv/BlockDriver/Tlm.xml</import_dictionary>-->
+    <import_port_type>Svc/Ping/PingPortAi.xml</import_port_type>
+    <import_port_type>Fw/Log/LogPortAi.xml</import_port_type>
+    
+    <ports>
+        <!-- Output log port -->
+        <port name="LogOut" data_type="Fw::Log" kind="output" role="LogEvent" max_number="1">
+            <comment>
+            The output log port
+            </comment>
+        </port>
+        
+        <!-- Ping ports -->
+        <port name="PingIn" data_type="Svc::Ping" kind="sync_input" max_number="1">
+            <comment>
+            Input ping port "Health"
+            </comment>
+        </port>
+        <port name="PingOut" data_type="Svc::Ping" kind="output" max_number="1">
+            <comment>
+            Output ping port "Health"
+            </comment>
+        </port>
+        
+    </ports>
+</component>
+
