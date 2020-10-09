@@ -71,10 +71,24 @@ Svc::TlmChanImpl tlmChan(
   );
 
 // ---------------------------------------------------------------------------
+//Health channel component used to check if other components are working
+Svc::HealthComponentImpl health(
+#if FW_OBJECT_NAMES == 1
+  "Health"
+#endif
+  );
+
+// ---------------------------------------------------------------------------
 // command dispatcher component used to dispatch commands
 Svc::CommandDispatcherImpl cmdDispatcher(
 #if FW_OBJECT_NAMES == 1
         "CmdDispatcher"
+#endif
+);
+
+CubeRover::LedComponentImpl led(
+#if FW_OBJECT_NAMES == 1
+  "Led"
 #endif
 );
 
@@ -105,6 +119,8 @@ void constructApp(void){
 
   // Initialize the telemetric channel component (active)
   tlmChan.init(TLM_CHAN_QUEUE_DEPTH, TLM_CHAN_ID);
+
+  led.init();
 
   // Construct the application and make all connections between components
   constructCubeRoverArchitecture();

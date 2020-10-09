@@ -7,7 +7,7 @@
 MODULES = 	Fatal Ping ActiveLogger Cycle Sched ActiveRateGroup BufferAccumulator \
 			BufferLogger BufferManager CmdDispatcher Seq CmdSequencer Cycle FatalHandle \
 			FileManager Time LinuxTime LinuxTimer RateGroupDriver Sched TlmChan Ping \
-			PassiveTextLogger PrmDb PassiveConsoleTextLogger
+			PassiveTextLogger PrmDb PassiveConsoleTextLogger Health Watchdog
 
 BASE_DIR = $(notdir $(CURDIR))
 

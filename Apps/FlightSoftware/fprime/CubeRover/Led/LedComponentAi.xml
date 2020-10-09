@@ -1,0 +1,14 @@
+<component name="Led" kind="passive" namespace="CubeRover">
+
+	<import_port_type>Svc/Sched/SchedPortAi.xml</import_port_type>
+	<comment>A component to blink an LED</comment>
+
+	<ports>
+		<port name="Run" data_type="Svc::Sched" kind="sync_input" max_number="1">
+			<comment>
+				Run port
+			</comment>
+		</port>
+	</ports>
+
+</component>

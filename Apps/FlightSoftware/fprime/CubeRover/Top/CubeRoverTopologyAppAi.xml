@@ -9,7 +9,9 @@
   <import_component_type>Svc/ActiveRateGroup/ActiveRateGroupComponentAi.xml</import_component_type>
   <import_component_type>Svc/Time/TimeComponentAi.xml</import_component_type>
   <import_component_type>Svc/TlmChan/TlmChanComponentAi.xml</import_component_type>
+  <import_component_type>Svc/Health/HealthComponentAi.xml</import_component_type>
   <import_component_type>Svc/CmdDispatcher/CommandDispatcherComponentAi.xml</import_component_type>
+  <import_component_type>CubeRover/Led/LedComponentAi.xml</import_component_type>
 
 <!-- Declaration of block driver that drive F-prime clocking and other async event -->
   <instance namespace="Drv" name="blockDriver" type="BlockDriver" base_id="1" base_id_window="20" />
@@ -26,8 +28,13 @@
 <!-- Declaration of telemetric chan that gathers all telemetric parameters (synchronous, synchronized by rate group low freq) -->
   <instance namespace="Svc" name="tlmChan" type="TlmChan" base_id="121"  base_id_window="20" />
 
+<!-- Declaration of health component that pings other components to make sure they work -->
+  <instance namespace="Svc" name="health" type="Health" base_id="141"  base_id_window="20" />
+
 <!-- Declaration of the command dispatcher -->
   <instance namespace="Svc" name="cmdDispatcher" type="CommandDispatcher" base_id="201" base_id_window="20" />
+
+  <instance namespace="CubeRover" name="led" type="Led" base_id="221" base_id_window="20" />
 
 <!-- *********************************************************************************************************
         CONNECTION OF CYCLE PORTS BETWEEN COMPONENTS BLOCK DRIVER AND RATE GROUP COMPONENTS
@@ -66,6 +73,11 @@
   <connection name = "rgLowFreq_to_tlmChan_clk">
     <source component = "rateGroupLowFreq" port = "RateGroupMemberOut" type = "Sched" num = "0" />
     <target component = "tlmChan" port = "Run" type = "Sched" num = "0"/>
+  </connection>
+
+  <connection name="rgLowFreq_to_led_clk">
+    <source component="rateGroupLowFreq" port="RateGroupMemberOut" type="Sched" num="0" />
+    <target component="led" port="Run" type="Sched" num="0"/>
   </connection>
 
 <!-- *********************************************************************************************************
@@ -137,5 +149,70 @@
     <source component = "radioSerialInterface" port = "Tlm" type = "Tlm" num = "0" />
     <target component = "tlmChan" port = "TlmRecv" type = "Tlm" num = "0" />
   </connection>
+
+<!-- *********************************************************************************************************
+        CONNECTION OF MONITORED COMPONENTS TO HEALTH COMPONENT
+     ********************************************************************************************************* 
+      -->
+      <!--
+      Summary of mapping of health component:
+      Port # 0 : Rate Group Low Frequency
+      Port # 1 : Rate Group Medium Frequency
+      Port # 2 : Rate Group High Frequency
+      -->
+
+      <!-- Rate group low Freq to health component (port 0) -->
+    <connection name = "rgLowFreq_to_health">
+      <source component = "rateGroupLowFreq" port = "PingOut" type = "Ping" num = "0" />
+      <target component = "health" port = "PingReturn" type = "Ping" num = "0" />
+    </connection>
+
+      <!-- Rate Group Medium Freq to health component (port 1) -->
+    <connection name = "rgMedFreq_to_health">
+      <source component = "rateGroupMedFreq" port = "PingOut" type = "Ping" num = "0" />
+      <target component = "health" port = "PingReturn" type = "Ping" num = "0" />
+    </connection>
+
+      <!-- Rate Group High Freq to health component (port 1) -->
+    <connection name = "rgHiFreq_to_health">
+      <source component = "rateGroupHiFreq" port = "PingOut" type = "Ping" num = "0" />
+      <target component = "health" port = "PingReturn" type = "Ping" num = "0" />
+    </connection>
+
+
+<!-- *********************************************************************************************************
+        CONNECTION OF HEALTH COMPONENT TO MONITORED COMPONENTS
+     ********************************************************************************************************* 
+      -->
+      <!--
+      Summary of mapping of health component:
+      Port # 3 : Rate Group Low Frequency
+      Port # 4 : Rate Group Medium Frequency
+      Port # 5 : Rate Group High Frequency
+      -->
+
+      <!-- Rate group low Freq to health component (port 0) -->
+    <connection name = "health_to_rgLowFreq">
+      <source component = "health" port = "PingSend" type = "Ping" num = "0" />
+      <target component = "rateGroupLowFreq" port = "PingIn" type = "Ping" num = "0" />
+    </connection>
+
+      <!-- Rate Group Medium Freq to health component (port 1) -->
+    <connection name = "health_to_rgMedFreq">
+      <source component = "health" port = "PingSend" type = "Ping" num = "0" />
+      <target component = "rateGroupMedFreq" port = "PingIn" type = "Ping" num = "0" />
+    </connection>
+
+      <!-- Rate Group High Freq to health component (port 1) -->
+    <connection name = "health_to_rgHiFreq">
+      <source component = "health" port = "PingSend" type = "Ping" num = "0" />
+      <target component = "rateGroupHiFreq" port = "PingIn" type = "Ping" num = "0" />
+    </connection>
+
+
+
+
+
+
 
 </assembly>
