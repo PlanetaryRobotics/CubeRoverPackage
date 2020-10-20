@@ -3,6 +3,7 @@
 <!-- Import components to project -->
 <!-- Drivers -->
   <import_component_type>Drv/BlockDriver/BlockDriverComponentAi.xml</import_component_type>
+  <import_component_type>Drv/FreeRtosSerialDriver/FreeRtosSerialDriverComponentAi.xml</import_component_type>
 
 <!-- Services -->
   <import_component_type>Svc/RateGroupDriver/RateGroupDriverComponentAi.xml</import_component_type>
@@ -11,6 +12,9 @@
   <import_component_type>Svc/TlmChan/TlmChanComponentAi.xml</import_component_type>
   <import_component_type>Svc/CmdDispatcher/CommandDispatcherComponentAi.xml</import_component_type>
   <import_component_type>Svc/ActiveLogger/ActiveLoggerComponentAi.xml</import_component_type>
+
+
+<!-- Component exclusive to CubeRover -->
 
 <!-- Declaration of block driver that drive F-prime clocking and other async event -->
   <instance namespace="Drv" name="blockDriver" type="BlockDriver" base_id="1" base_id_window="20" />
@@ -33,6 +37,7 @@
 <!-- Declaration of the passive text logger component that logs events in non-volatile memory -->
 <!-- For CubeRover - we use external FRAM memory to store data, i.e. a custom implementation of that component is necessary -->
   <instance namespace="Svc" name="activeLogger" type="ActiveLogger" base_id="141" base_id_window="20" />
+
 
 <!-- *********************************************************************************************************
         CONNECTION OF CYCLE PORTS BETWEEN COMPONENTS BLOCK DRIVER AND RATE GROUP COMPONENTS
@@ -139,10 +144,27 @@
     <target component = "tlmChan" port = "TlmRecv" type = "Tlm" num = "0" />
   </connection>
 
-    <!-- Radio serial interface to telemetnic channel (port 3) -->
-  <connection name = "radioSerialInterface_to_chanTlm">
-    <source component = "radioSerialInterface" port = "Tlm" type = "Tlm" num = "0" />
-    <target component = "tlmChan" port = "TlmRecv" type = "Tlm" num = "0" />
+  <!-- *********************************************************************************************************
+        CONNECTION OF MONITORED COMPONENTS TO TELEMETRIC ACTIVE LOGGER COMPONENT
+       ********************************************************************************************************* 
+      -->
+
+      <!-- Rate group low freq to active logger -->
+  <connection name = "rgLowFreq_to_aLogger">
+    <source component = "rateGroupLowFreq" port = "Log" type = "Log" num = "0" />
+    <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
+  </connection>
+
+      <!-- Rate group med freq to active logger -->
+  <connection name = "rgMedFreq_to_aLogger">
+    <source component = "rateGroupMedFreq" port = "Log" type = "Log" num = "0" />
+    <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
+  </connection>
+
+      <!-- Rate group high freq to active logger -->
+  <connection name = "rgHiFreq_to_aLogger">
+    <source component = "rateGroupHiFreq" port = "Log" type = "Log" num = "0" />
+    <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
   </connection>
 
 

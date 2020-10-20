@@ -56,16 +56,4 @@
 
 #define MIN_STACK_SIZE_BYTES        1024
 
-// Configuration of I2C interfaces address and ports
-// For the motor controllers
-#define FRONT_LEFT_MC_I2C_ADDR   	0x01
-#define FRONT_RIGHT_MC_I2C_ADDR  	0x02
-#define REAR_LEFT_MC_I2C_ADDR    	0x03
-#define REAR_RIGHT_MC_I2C_ADDR   	0x04
-#define MOTOR_CONTROL_I2CREG     	i2cREG1
-
-#define CUBEROVER_WHEEL_DIAMETER_CM		20.0f
-#define MOTOR_NB_PAIR_POLES				1.0f
-#define MOTOR_GEAR_BOX_REDUCTION		5.0f
-
 #endif /* INCLUDE_CUBEROVERCONFIG_HPP_ */

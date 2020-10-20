@@ -35,13 +35,12 @@ extern Svc::CubeRoverTimeImpl cubeRoverTime;
 // Telemetric channel component that takes care of channeling all data to a central place
 extern Svc::TlmChanImpl tlmChan;
 
-// Service that handle active logging
+// command dispatcher
+extern Svc::CommandDispatcherImpl cmdDispatcher;
+
 extern Svc::ActiveLoggerImpl activeLogger;
 
 // FreeRTOS Serial driver to interface radio module
 extern Drv::FreeRtosSerialDriverComponentImpl radioSerialInterface;
-
-// command dispatcher
-extern Svc::CommandDispatcherImpl cmdDispatcher;
 
 #endif /* F_PRIME_CUBEROVER_TOP_COMPONENTS_HPP_ */

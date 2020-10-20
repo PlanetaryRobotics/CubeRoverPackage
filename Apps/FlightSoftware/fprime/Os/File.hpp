@@ -4,6 +4,25 @@
 #include <Fw/Cfg/Config.hpp>
 #include <Fw/Types/BasicTypes.hpp>
 
+#include "FreeRTOS/S25fl064l.hpp"
+
+#ifdef __TIR4__
+    #define SYSTEM_FILE_HEADER_MEM_ALLOC  PAGE_SIZE  // memory allocated to save the system file look-up table
+    #define MAX_NUMBER_OF_FILES           2   // max number of file that can be created 
+    #define SIZE_OF_FILENAME              16  // bytes
+    #define SIZE_OF_FILE_START_ADDRESS    4   // bytes
+    #define SIZE_OF_FILE_CURRENT_POINTER  4   // bytes
+    #define SIZE_OF_FILE_SIZE             4   // bytes
+    #define NEW_DEFAULT_FILE_SIZE         (MAX_MEMORY_ADDRESS - (PAGE_SIZE)) / MAX_NUMBER_OF_FILES
+    #define SYSTEM_FILE_ENTRY_SIZE        SIZE_OF_FILENAME + SIZE_OF_FILE_START_ADDRESS + SIZE_OF_FILE_CURRENT_POINTER + SIZE_OF_FILE_SIZE   
+
+    typedef char FileName[SIZE_OF_FILENAME];
+    typedef uint32_t AddressPointer;
+    typedef AddressPointer StartAddress;
+    typedef AddressPointer FilePointer;
+    typedef uint32_t FileSize;
+#endif
+
 namespace Os {
 
     // This class encapsulates a very simple file interface that has the most often-used features
@@ -55,7 +74,18 @@ namespace Os {
             NATIVE_INT_TYPE m_fd; //!<  Stored file descriptor
             Mode m_mode; //!<  Stores mode for error checking
             NATIVE_INT_TYPE m_lastError; //!<  stores last error
-
+        
+        #ifdef __TIR4__
+            // required to run 
+            S25fl064l m_flashMem;
+            S25fl064l::MemAlloc m_headerMemAlloc;
+            File::Status flashMemErrToStatus(const S25fl064l::S25fl064lError err);
+            uint8_t m_fileIndex;
+            FileName m_fileName;
+            StartAddress m_fileStartAddress;
+            FilePointer m_fileOffsetPointer;
+            FileSize m_fileSize;
+        #endif
     };
 
 }

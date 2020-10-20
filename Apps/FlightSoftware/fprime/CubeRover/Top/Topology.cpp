@@ -78,7 +78,15 @@ Svc::CommandDispatcherImpl cmdDispatcher(
 #if FW_OBJECT_NAMES == 1
         "CmdDispatcher"
 #endif
-);
+  );
+
+// ---------------------------------------------------------------------------
+// Active logger data component used to log system events
+Svc::ActiveLoggerImpl activeLogger(
+#if FW_OBJECT_NAMES == 1
+        "ActiveLogger"
+#endif
+  );
 
 
 
@@ -107,6 +115,8 @@ void constructApp(void){
   // Initialize cubeRover time component (passive)
   cubeRoverTime.init(0);
 
+  activeLogger.init(ACTIVE_LOGGER_QUEUE_DEPTH, ACTIVE_LOGGER_ID);
+
   // Initialize the telemetric channel component (active)
   tlmChan.init(TLM_CHAN_QUEUE_DEPTH, TLM_CHAN_ID);
 
@@ -132,4 +142,8 @@ void constructApp(void){
   tlmChan.start(0, /* identifier */
                 TLM_CHAN_AFF, /* thread affinity */
                 TLM_CHAN_QUEUE_DEPTH*MIN_STACK_SIZE_BYTES); /* stack size */
+
+  activeLogger.start(ACTIVE_LOGGER_ID, /* identifier */
+                     ACTIVE_LOGGER_AFF, /* CPU priority  */
+                     ACTIVE_LOGGER_QUEUE_DEPTH*MIN_STACK_SIZE_BYTES); /* stack size */
 }
