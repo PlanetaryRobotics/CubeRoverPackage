@@ -77,6 +77,22 @@ namespace Svc {
           U32 key /*!< Value to return to pinger*/
       );
 
+      //! Implementation for SendAllLogs command handler
+      //! Sends all logs from flash to Ground
+      void SendAllLogs_cmdHandler(
+          const FwOpcodeType opCode, /*!< The opcode*/
+          const U32 cmdSeq /*!< The command sequence number*/
+      );
+
+      //! Implementation for SendSetofLogs command handler
+      //! Sends a set of logs from flash to Ground
+      void SendSetofLogs_cmdHandler(
+          const FwOpcodeType opCode, /*!< The opcode*/
+          const U32 cmdSeq, /*!< The command sequence number*/
+          U32 start, /*!< The start time for a log*/
+          U32 end /*!< The end time for a log*/
+      );
+
       // ----------------------------------------------------------------------
       // Constants:
       // ----------------------------------------------------------------------
@@ -131,6 +147,16 @@ namespace Svc {
       );
 
       void writeHashFile(
+      );
+
+      void readFiletoComBuffer(
+        Fw::ComBuffer &data,
+        U16 size
+      );
+
+      bool readFromFile(
+        void* buffer,
+        U16 length  
       );
   };
 };

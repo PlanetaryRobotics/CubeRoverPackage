@@ -15,4 +15,20 @@
     <comment>Forces a close of the currently opened file.</comment>
   </command>
 
+  <command kind="async" opcode="0x01" mnemonic="SendAllLogs">
+    <comment>Sends all logs from flash to Ground</comment>
+  </command>
+
+  <command kind="async" opcode="0x02" mnemonic="SendSetofLogs">
+    <comment>Sends a set of logs from flash to Ground</comment>
+    <args>
+    	<arg name="start" type="U32">
+    		<comment>The start time (seconds) for a log</comment>
+    	</arg>
+    	<arg name="end" type="U32">
+    		<comment>The end time (seconds) for a log</comment>
+    	</arg>
+    </args>	
+  </command>
+
 </commands>

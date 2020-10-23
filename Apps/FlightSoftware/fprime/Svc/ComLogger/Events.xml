@@ -65,4 +65,31 @@
     </args>
   </event>
 
+  <event id="0x04" name="TimeNotAvaliable" severity="WARNING_LO" format_string="Requested Time %s to %s Not Saved in Flash">
+    <comment>Time sent by ground not currently stored in memory</comment>
+    <args>
+      <arg name="start" type="string" size="240">
+        <comment>The start time requested by ground</comment>
+      </arg>
+      <arg name="end" type="string" size="240">
+        <comment>The end time requested by ground</comment>
+      </arg>
+    </args>
+  </event>
+
+  <event id="0x05" name="FileReadError" severity="WARNING_HI" format_string="Error %d while reading %d of %s">
+    <comment>The ComLogger encountered an error reading a file</comment>
+    <args>
+      <arg name="errornum" type="U32" size="240">
+        <comment>The error number returned from write file</comment>
+      </arg>
+      <arg name="bytesReading" type="U32" size="240">
+        <comment>The number of bytes to read</comment>
+      </arg>
+      <arg name="file" type="string" size="240">
+        <comment>The file</comment>
+      </arg>
+    </args>
+  </event>
+
 </events>
