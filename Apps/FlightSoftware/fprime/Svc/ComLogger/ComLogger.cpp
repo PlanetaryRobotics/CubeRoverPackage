@@ -10,8 +10,16 @@
 #include <Os/ValidateFile.hpp>
 #include <iostream>
 #include <stdio.h>
+#include <string.h>
 
 using namespace std;
+
+//create array of file names
+struct fileList file_loc[MAX_NUM_FILES];
+//keep track of earliest file
+U32 file_start;
+//keep track of most recent file
+U32 file_end;
 
 namespace Svc {
 
@@ -56,6 +64,8 @@ namespace Svc {
     )
   {
     ComLoggerComponentBase::init(queueDepth, instance);
+    file_start = 0;
+    file_end = 0;
   }
 
   ComLogger ::
@@ -101,7 +111,7 @@ namespace Svc {
     // ComLogger only writes 16-bit sizes to save space 
     // on disk:
     FW_ASSERT(size32 < 65536, size32);
-    U16 size = size32 & 0xFFFF
+    U16 size = size32 & 0xFFFF;
 
     // Close the file if it will be too big:
     if( OPEN == this->fileMode ) {
@@ -141,28 +151,43 @@ namespace Svc {
         const U32 cmdSeq
     )
   {
-    // TODO
     // Get logs from flash
 
-    //Create a ComBuffer called data to store logs read from flash
-    Fw::ComBuffer data;
+    // Go through all files and send the contents to Ground
+    for(U32 file_index = file_start; file_index != file_end; file_index++)
+    {
+        //check if file_index is larger than array
+        if(file_index >= MAX_NUM_FILES)
+          file_index = 0; 
 
-    // Open the file if it there is not one open:
-    if( CLOSED == this->fileMode ){
-      this->openFile();
-    }
+        // Create a ComBuffer called data to store logs read from flash
+        Fw::ComBuffer data;
 
-    // If file is Open, then we read to the ComBuffer Data
-    if( OPEN == this->fileMode ) {
-      this->readFiletoComBuffer(&data, this->byteCount);
-    }
+        // Open the file designated by file_index
+        Os::File::Status ret = file.open((char*) file_loc[file_index].fileName, Os::File::OPEN_READ);
 
-    // Put logs into ground output buffer and send them out
-    // *NOTE* All logs should still be in serialized format since they were stored in serialized format
-    if (this->isConnected_GndOut_OutputPort(0)) {
-            this->GndOut_out(0, data,0);
+        if( Os::File::OP_OK != ret ) {
+          if( !openErrorOccured ) { // throttle this event, otherwise a positive 
+                                    // feedback event loop can occur!
+            Fw::LogStringArg logStringArg((char*) this->fileName);
+            this->log_WARNING_HI_FileOpenError(ret, logStringArg);
+          }
+          openErrorOccured = true;
+        } 
+        else {
+          // Reset event throttle:
+          openErrorOccured = false;
+
+          // If file is Open, then we read to the ComBuffer Data
+          this->readFiletoComBuffer(&data, this->maxFileSize);
+          
+          // Put logs into ground output buffer and send them out
+          // *NOTE* All logs should still be in serialized format since they were stored in serialized format
+          if (this->isConnected_GndOut_OutputPort(0)) {
+                  this->GndOut_out(0, data,0);
+              }
         }
-
+    }
     // Send Output buffer to ground
     this->cmdResponse_out(opCode,cmdSeq,Fw::COMMAND_OK);
   }
@@ -175,55 +200,65 @@ namespace Svc {
         U32 end
     )
   {
-    // TODO
-    // Get specific logs from flash
+    // Parse time for earliest log
+    char* start_time_char = strtok(file_loc[file_start].fileName, "_");
+    // Convert time to U32
+    U32 start_time = (U32) atoi(start_time_char);
 
-    //Create a ComBuffer called data to store logs read from flash, deserialized_buffer for deserializing, output_data for the specific logs we need
-    Fw::ComBuffer data;
-    //Fw::ComBuffer deserial_data;
-    Fw::ComBuffer output_data;
+    // Parse time for most recent log
+    char* end_time_char = strtok(file_loc[file_end].fileName, "_");
+    // Convert time to U32
+    U32 end_time = (U32) atoi(end_time_char);
 
-    // Open the file if it there is not one open:
-    if( CLOSED == this->fileMode ){
-      this->openFile();
-    }
-
-    // If file is Open, then we read to the ComBuffer Data
-    if( OPEN == this->fileMode ) {
-      this->readFiletoComBuffer(&data, this->byteCount);
-    }
-
-    // Deserialize Data from Flash so we can read it
-    data.deserialize(data);
-
-    // Go through all logs and search for Logs between start and end
-    U8 current_address = data.getBuffAddr();
-    U8 ending_add = data.getBuffAddr() + data.getBuffLength();
-
-    for(current_address; current_address+= sizeof(Fw::LogPacket); current_address >= ending_add)
+    if(start < start_time || end > end_time)
     {
-      // Convert address at current_address to a LogPacket
-      Fw::LogPacket singluar_log = (Fw::LogPacket) current_address;
-      //Get the TimeTag then Seconds from the LogPacket
-      U32 singular_log_time = singluar_log.getTimeTag().getSeconds();
-
-      if(singular_log_time >= start && singular_log_time <= end)
-      {
-        //copy data from deserialized_data into output_data
-      }
+      this->log_WARNING_LO_TimeNotAvaliable((char*)start, (char*)end);
     }
-    // Serialize output_data so we can send it to ground
-    output_data.serialize(output_data);
 
-    // Must figure out how we know what times logs are at
-    // What is the current table of files and how are they stored?
-    // Do I need to associate a time to a file or no? How can I find specific times?
+    // Go through all files and send the contents to Ground
+    for(U32 file_index = file_start; file_index != file_end; file_index++)
+    {
+        //check if file_index is larger than array
+        if(file_index >= MAX_NUM_FILES)
+          file_index = 0; 
+        
+        // Parse time for current index log
+        char* index_time_char = strtok(file_loc[file_index].fileName, "_");
+        // Convert time to U32
+        U32 index_time = (U32) atoi(index_time_char);
 
+        //check if index is within start and end 
+        if(index_time >= start && index_time <= end)
+        {
+          // Create a ComBuffer called data to store logs read from flash
+          Fw::ComBuffer data;
 
-    // Put logs into ground output buffer and send them out
-    if (this->isConnected_GndOut_OutputPort(0)) {
-            this->GndOut_out(0, output_data, 0);
+          // Open the file designated by file_index
+          Os::File::Status ret = file.open((char*) file_loc[file_index].fileName, Os::File::OPEN_READ);
+
+          if( Os::File::OP_OK != ret ) {
+            if( !openErrorOccured ) { // throttle this event, otherwise a positive 
+                                      // feedback event loop can occur!
+              Fw::LogStringArg logStringArg((char*) this->fileName);
+              this->log_WARNING_HI_FileOpenError(ret, logStringArg);
+            }
+            openErrorOccured = true;
+          } 
+          else {
+            // Reset event throttle:
+            openErrorOccured = false;
+
+            // If file is Open, then we read to the ComBuffer Data
+            this->readFiletoComBuffer(&data, this->maxFileSize);
+            
+            // Put logs into ground output buffer and send them out
+            // *NOTE* All logs should still be in serialized format since they were stored in serialized format
+            if (this->isConnected_GndOut_OutputPort(0)) {
+                    this->GndOut_out(0, data,0);
+                }
+          }
         }
+    }
 
     // Send Output buffer to ground
     this->cmdResponse_out(opCode,cmdSeq,Fw::COMMAND_OK);
@@ -250,16 +285,16 @@ namespace Svc {
     // Create filename:
     Fw::Time timestamp = getTime();
     memset(this->fileName, 0, sizeof(this->fileName));
-    bytesCopied = snprintf((char*) this->fileName, sizeof(this->fileName), "%s_%d_%d_%06d.com", 
-      this->filePrefix, (U32) timestamp.getTimeBase(), timestamp.getSeconds(), timestamp.getUSeconds());
+    bytesCopied = snprintf((char*) this->fileName, sizeof(this->fileName), "%d_%d.com", 
+      timestamp.getSeconds(), (U32) timestamp.getTimeBase());
 
     // "A return value of size or more means that the output was truncated"
     // See here: http://linux.die.net/man/3/snprintf
     FW_ASSERT( bytesCopied < sizeof(this->fileName) );
 
     // Create sha filename:
-    bytesCopied = snprintf((char*) this->hashFileName, sizeof(this->hashFileName), "%s_%d_%d_%06d.com%s", 
-      this->filePrefix, (U32) timestamp.getTimeBase(), timestamp.getSeconds(), timestamp.getUSeconds(), Utils::Hash::getFileExtensionString());
+    bytesCopied = snprintf((char*) this->hashFileName, sizeof(this->hashFileName), "%d_%d.com%s", 
+      timestamp.getSeconds(), (U32) timestamp.getTimeBase(), Utils::Hash::getFileExtensionString());
     FW_ASSERT( bytesCopied < sizeof(this->hashFileName) );
 
     Os::File::Status ret = file.open((char*) this->fileName, Os::File::OPEN_WRITE);
@@ -279,6 +314,24 @@ namespace Svc {
 
       // Set mode:
       this->fileMode = OPEN; 
+
+      // Copy fileName into file location list at the file_end spot 
+      memcpy(&file_loc[file_end].fileName, &this->fileName, sizeof(this->fileName));
+
+      //increment file_end for next open file
+      file_end++;
+
+      //check if file_end is greater than the array, if so, we set it back to zero
+      if(file_end >= MAX_NUM_FILES)
+        file_end = 0;
+
+      //check if file_end and file_start are equal, increment file_start
+      if(file_start == file_end)
+        file_start++;
+
+      //check if file_start is greater than the array
+      if(file_start >= MAX_NUM_FILES)
+        file_start == 0;
     }    
   }
 
@@ -391,5 +444,5 @@ namespace Svc {
     )
   {
     // Read file to buffer:
-    writeToFile(data.getBuffAddr(), size);
+    readFromFile(data.getBuffAddr(), size);
   };

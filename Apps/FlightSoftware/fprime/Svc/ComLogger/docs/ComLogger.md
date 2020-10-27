@@ -9,8 +9,8 @@
 |CloseFile|0 (0x0)|Forces a close of the currently opened file.| | |
 |SendAllLogs|1 (0x1)|Sends all logs from flash to Ground| | |
 |SendSetofLogs|2 (0x2)|Sends a set of logs from flash to Ground| | |
-| | | |start|Fw::Time|The start time for a log|
-| | | |end|Fw::Time|The end time for a log|
+| | | |start|U32|The start time (seconds) for a log|
+| | | |end|U32|The end time (seconds) for a log|
 
 
 ## Event List
@@ -34,3 +34,7 @@
 |TimeNotAvaliable|4 (0x4)|Time sent by ground not currently stored in memory| | | | |
 | | | |start|Fw::LogStringArg&|240|The start time requested by ground|
 | | | |end|Fw::LogStringArg&|240|The end time requested by ground|
+|FileReadError|5 (0x5)|The ComLogger encountered an error reading a file| | | | |
+| | | |errornum|U32||The error number returned from write file|
+| | | |bytesReading|U32||The number of bytes to read|
+| | | |file|Fw::LogStringArg&|240|The file|

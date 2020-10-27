@@ -17,6 +17,8 @@
 #ifdef __TI_ARM__   // TI ARM doesn't define limits.h
 #define NAME_MAX 255
 #define PATH_MAX 4096
+#define MAX_FILE_SIZE 100
+#define MAX_NUM_FILES 500
 #endif
 #include <stdio.h>
 #include <cstdarg>
@@ -104,7 +106,7 @@ namespace Svc {
 
       // The filename data:
       U8 filePrefix[MAX_FILENAME_SIZE + MAX_PATH_SIZE];
-      U32 maxFileSize;
+      U32 maxFileSize = MAX_FILE_SIZE;
 
       // ----------------------------------------------------------------------
       // Internal state:
@@ -112,6 +114,10 @@ namespace Svc {
       enum FileMode {
           CLOSED = 0,
           OPEN = 1
+      };
+
+      struct fileList{
+        U8 fileName[MAX_FILENAME_SIZE + MAX_PATH_SIZE];
       };
 
       FileMode fileMode;
@@ -140,7 +146,6 @@ namespace Svc {
       // ----------------------------------------------------------------------
       // Helper functions:
       // ---------------------------------------------------------------------- 
-
       bool writeToFile(
         void* data, 
         U16 length
