@@ -173,7 +173,7 @@ namespace CubeRover {
           openErrorOccured = false;
 
           // If file is Open, then we read to the ComBuffer Data
-          this->readFiletoComBuffer(const &data, this->maxFileSize);
+          this->readFiletoComBuffer(data, this->maxFileSize);
           
           // Put logs into ground output buffer and send them out
           // *NOTE* All logs should still be in serialized format since they were stored in serialized format
@@ -198,12 +198,15 @@ namespace CubeRover {
     // Parse time for earliest log
     parseSeconds(time_buff, this->file_loc[this->file_start].fileName);
     // Convert time to U32
-    U32 start_time = static_cast<U32> (atoi(&time_buff));
+    U32 start_time = static_cast<U32> (atoi(time_buff));
+
+    //clear time_buff
+    memset(time_buff, 0, sizeof(time_buff));
 
     // Parse time for most recent log
-    char* end_time_char = strtok(static_cast<char*> (this->file_loc[this->file_end].fileName), "_");
+    parseSeconds(time_buff, this->file_loc[this->file_end].fileName);
     // Convert time to U32
-    U32 end_time = static_cast<U32> (atoi(const end_time_char));
+    U32 end_time = static_cast<U32> (atoi(time_buff));
 
     if(start < start_time || end > end_time)
     {
@@ -219,10 +222,13 @@ namespace CubeRover {
         if(file_index >= MAX_NUM_FILES)
           file_index = 0; 
         
+        //clear time_buff
+        memset(time_buff, 0, sizeof(time_buff));
+
         // Parse time for current index log
-        char* index_time_char = strtok(this->file_loc[file_index].fileName, "_");
+        parseSeconds(time_buff, this->file_loc[file_index].fileName);
         // Convert time to U32
-        U32 index_time = (U32) atoi(const index_time_char);
+        U32 index_time = static_cast<U32> (atoi(time_buff));
 
         //check if index is within start and end 
         if(index_time >= start && index_time <= end)
@@ -246,7 +252,7 @@ namespace CubeRover {
             openErrorOccured = false;
 
             // If file is Open, then we read to the ComBuffer Data
-            this->readFiletoComBuffer(const &data, this->maxFileSize);
+            this->readFiletoComBuffer(data, this->maxFileSize);
             
             // Put logs into ground output buffer and send them out
             // *NOTE* All logs should still be in serialized format since they were stored in serialized format
