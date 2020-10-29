@@ -4,24 +4,18 @@
 //
 // ----------------------------------------------------------------------
 
-#include <Svc/ComLogger/ComLogger.hpp>
+#include <CubeRover/ComLogger/ComLogger.hpp>
 #include <Fw/Types/BasicTypes.hpp>
 #include <Fw/Types/SerialBuffer.hpp>
 #include <Os/ValidateFile.hpp>
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 using namespace std;
 
-//create array of file names
-struct fileList file_loc[MAX_NUM_FILES];
-//keep track of earliest file
-U32 file_start;
-//keep track of most recent file
-U32 file_end;
-
-namespace Svc {
+namespace CubeRover {
 
   // ----------------------------------------------------------------------
   // Construction, initialization, and destruction 
@@ -55,6 +49,8 @@ namespace Svc {
     memset(this->filePrefix, 0, sizeof(this->filePrefix)); // probably unnecesary, but I am paranoid.
     U8* dest = (U8*) strncpy((char*) this->filePrefix, incomingFilePrefix, sizeof(this->filePrefix));
     FW_ASSERT(dest == this->filePrefix, reinterpret_cast<U64>(dest), reinterpret_cast<U64>(this->filePrefix));
+    this->file_start = 0;
+    this->file_end = 0;
   }
 
   void ComLogger :: 
@@ -64,8 +60,6 @@ namespace Svc {
     )
   {
     ComLoggerComponentBase::init(queueDepth, instance);
-    file_start = 0;
-    file_end = 0;
   }
 
   ComLogger ::
@@ -145,7 +139,7 @@ namespace Svc {
     this->cmdResponse_out(opCode, cmdSeq, Fw::COMMAND_OK);
   }
 
-  void ComLoggerComponentImpl ::
+  void ComLogger ::
     SendAllLogs_cmdHandler(
         const FwOpcodeType opCode,
         const U32 cmdSeq
@@ -154,7 +148,7 @@ namespace Svc {
     // Get logs from flash
 
     // Go through all files and send the contents to Ground
-    for(U32 file_index = file_start; file_index != file_end; file_index++)
+    for(U32 file_index = this->file_start; file_index != this->file_end; file_index++)
     {
         //check if file_index is larger than array
         if(file_index >= MAX_NUM_FILES)
@@ -164,7 +158,7 @@ namespace Svc {
         Fw::ComBuffer data;
 
         // Open the file designated by file_index
-        Os::File::Status ret = file.open((char*) file_loc[file_index].fileName, Os::File::OPEN_READ);
+        Os::File::Status ret = file.open((char*) this->file_loc[file_index].fileName, Os::File::OPEN_READ);
 
         if( Os::File::OP_OK != ret ) {
           if( !openErrorOccured ) { // throttle this event, otherwise a positive 
@@ -179,7 +173,7 @@ namespace Svc {
           openErrorOccured = false;
 
           // If file is Open, then we read to the ComBuffer Data
-          this->readFiletoComBuffer(&data, this->maxFileSize);
+          this->readFiletoComBuffer(const &data, this->maxFileSize);
           
           // Put logs into ground output buffer and send them out
           // *NOTE* All logs should still be in serialized format since they were stored in serialized format
@@ -192,7 +186,7 @@ namespace Svc {
     this->cmdResponse_out(opCode,cmdSeq,Fw::COMMAND_OK);
   }
 
-  void ComLoggerComponentImpl ::
+  void ComLogger ::
     SendSetofLogs_cmdHandler(
         const FwOpcodeType opCode,
         const U32 cmdSeq,
@@ -200,32 +194,35 @@ namespace Svc {
         U32 end
     )
   {
+    char time_buff[MAX_FILENAME_SIZE + MAX_PATH_SIZE];
     // Parse time for earliest log
-    char* start_time_char = strtok(file_loc[file_start].fileName, "_");
+    parseSeconds(time_buff, this->file_loc[this->file_start].fileName);
     // Convert time to U32
-    U32 start_time = (U32) atoi(start_time_char);
+    U32 start_time = static_cast<U32> (atoi(&time_buff));
 
     // Parse time for most recent log
-    char* end_time_char = strtok(file_loc[file_end].fileName, "_");
+    char* end_time_char = strtok(static_cast<char*> (this->file_loc[this->file_end].fileName), "_");
     // Convert time to U32
-    U32 end_time = (U32) atoi(end_time_char);
+    U32 end_time = static_cast<U32> (atoi(const end_time_char));
 
     if(start < start_time || end > end_time)
     {
-      this->log_WARNING_LO_TimeNotAvaliable((char*)start, (char*)end);
+      Fw::LogStringArg logStringArg1((char*) start);
+      Fw::LogStringArg logStringArg2((char*) end);
+      this->log_WARNING_LO_TimeNotAvaliable(logStringArg1, logStringArg2);
     }
 
     // Go through all files and send the contents to Ground
-    for(U32 file_index = file_start; file_index != file_end; file_index++)
+    for(U32 file_index = this->file_start; file_index != this->file_end; file_index++)
     {
         //check if file_index is larger than array
         if(file_index >= MAX_NUM_FILES)
           file_index = 0; 
         
         // Parse time for current index log
-        char* index_time_char = strtok(file_loc[file_index].fileName, "_");
+        char* index_time_char = strtok(this->file_loc[file_index].fileName, "_");
         // Convert time to U32
-        U32 index_time = (U32) atoi(index_time_char);
+        U32 index_time = (U32) atoi(const index_time_char);
 
         //check if index is within start and end 
         if(index_time >= start && index_time <= end)
@@ -234,7 +231,7 @@ namespace Svc {
           Fw::ComBuffer data;
 
           // Open the file designated by file_index
-          Os::File::Status ret = file.open((char*) file_loc[file_index].fileName, Os::File::OPEN_READ);
+          Os::File::Status ret = file.open((char*) this->file_loc[file_index].fileName, Os::File::OPEN_READ);
 
           if( Os::File::OP_OK != ret ) {
             if( !openErrorOccured ) { // throttle this event, otherwise a positive 
@@ -249,7 +246,7 @@ namespace Svc {
             openErrorOccured = false;
 
             // If file is Open, then we read to the ComBuffer Data
-            this->readFiletoComBuffer(&data, this->maxFileSize);
+            this->readFiletoComBuffer(const &data, this->maxFileSize);
             
             // Put logs into ground output buffer and send them out
             // *NOTE* All logs should still be in serialized format since they were stored in serialized format
@@ -316,22 +313,22 @@ namespace Svc {
       this->fileMode = OPEN; 
 
       // Copy fileName into file location list at the file_end spot 
-      memcpy(&file_loc[file_end].fileName, &this->fileName, sizeof(this->fileName));
+      memcpy(&this->file_loc[this->file_end].fileName, &this->fileName, sizeof(this->fileName));
 
       //increment file_end for next open file
-      file_end++;
+      this->file_end++;
 
       //check if file_end is greater than the array, if so, we set it back to zero
-      if(file_end >= MAX_NUM_FILES)
-        file_end = 0;
+      if(this->file_end >= MAX_NUM_FILES)
+          this->file_end = 0;
 
       //check if file_end and file_start are equal, increment file_start
-      if(file_start == file_end)
-        file_start++;
+      if(this->file_start == this->file_end)
+          this->file_start++;
 
       //check if file_start is greater than the array
-      if(file_start >= MAX_NUM_FILES)
-        file_start == 0;
+      if(this->file_start >= MAX_NUM_FILES)
+          this->file_start = 0;
     }    
   }
 
@@ -413,12 +410,12 @@ namespace Svc {
       this->log_WARNING_LO_FileValidationError(logStringArg1, logStringArg2, validateStatus);
     }
   }
-}
+
 
   bool ComLogger :: 
     readFromFile(
       void* buffer,
-      U16 length
+      U32 length
     )
   {
     NATIVE_INT_TYPE size = length;
@@ -440,9 +437,26 @@ namespace Svc {
   void ComLogger ::
     readFiletoComBuffer(
       Fw::ComBuffer &data,
-      U16 size
+      U32 size
     )
   {
     // Read file to buffer:
     readFromFile(data.getBuffAddr(), size);
+  }
+
+  void ComLogger ::
+      parseSeconds(
+        char temp_buffer[MAX_FILENAME_SIZE + MAX_PATH_SIZE],
+        U8 fileName[MAX_FILENAME_SIZE + MAX_PATH_SIZE]
+      )
+  {
+      for(unsigned int i = 0; i < sizeof(fileName); i++)
+      {
+          char temp_char = (char)fileName[i];
+          if(temp_char == '_')
+              return;
+          else
+              temp_buffer[i] = temp_char;
+      }
   };
+}

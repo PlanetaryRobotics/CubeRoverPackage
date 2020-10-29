@@ -4,10 +4,10 @@
 //
 // ----------------------------------------------------------------------
 
-#ifndef Svc_ComLogger_HPP
-#define Svc_ComLogger_HPP
+#ifndef CubeRover_ComLogger_HPP
+#define CubeRover_ComLogger_HPP
 
-#include "Svc/ComLogger/ComLoggerComponentAc.hpp"
+#include "CubeRover/ComLogger/ComLoggerComponentAc.hpp"
 #include <Os/File.hpp>
 #include <Os/Mutex.hpp>
 #include <Fw/Types/Assert.hpp>
@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <cstdarg>
 
-namespace Svc {
+namespace CubeRover {
 
   class ComLogger :
     public ComLoggerComponentBase
@@ -116,9 +116,18 @@ namespace Svc {
           OPEN = 1
       };
 
+      //create struct to make an array of filenames
       struct fileList{
         U8 fileName[MAX_FILENAME_SIZE + MAX_PATH_SIZE];
       };
+
+      //create array of file names
+      struct fileList file_loc[MAX_NUM_FILES];
+
+      //keep track of earliest file
+      U32 file_start;
+      //keep track of most recent file
+      U32 file_end;
 
       FileMode fileMode;
       Os::File file;
@@ -126,6 +135,7 @@ namespace Svc {
       U8 hashFileName[MAX_FILENAME_SIZE + MAX_PATH_SIZE];
       U32 byteCount;
       bool writeErrorOccured;
+      bool readErrorOccured;
       bool openErrorOccured;
       bool storeBufferLength;
       
@@ -156,12 +166,17 @@ namespace Svc {
 
       void readFiletoComBuffer(
         Fw::ComBuffer &data,
-        U16 size
+        U32 size
       );
 
       bool readFromFile(
         void* buffer,
-        U16 length  
+        U32 length
+      );
+
+      void parseSeconds(
+        char temp_buffer[MAX_FILENAME_SIZE + MAX_PATH_SIZE],
+        U8 fileName[MAX_FILENAME_SIZE + MAX_PATH_SIZE]
       );
   };
 };

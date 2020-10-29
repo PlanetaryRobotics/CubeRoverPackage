@@ -13,7 +13,7 @@
 #ifndef ComLogger_TESTER_BASE_HPP
 #define ComLogger_TESTER_BASE_HPP
 
-#include <Svc/ComLogger/ComLoggerComponentAc.hpp>
+#include <CubeRover/ComLogger/ComLoggerComponentAc.hpp>
 #include <Fw/Types/Assert.hpp>
 #include <Fw/Comp/PassiveComponentBase.hpp>
 #include <stdio.h>

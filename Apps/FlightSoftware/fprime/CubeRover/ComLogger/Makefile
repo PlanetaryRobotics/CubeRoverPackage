@@ -2,7 +2,7 @@
 # Makefile
 # ---------------------------------------------------------------------- 
 
-MODULE_DIR = Svc/ComLogger
+MODULE_DIR = CubeRover/ComLogger
 MODULE = $(subst /,,$(MODULE_DIR))
 
 BUILD_ROOT ?= $(subst /$(MODULE_DIR),,$(CURDIR))

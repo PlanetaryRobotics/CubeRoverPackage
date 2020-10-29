@@ -13,6 +13,9 @@
   <import_component_type>Svc/CmdDispatcher/CommandDispatcherComponentAi.xml</import_component_type>
   <import_component_type>Svc/ActiveLogger/ActiveLoggerComponentAi.xml</import_component_type>
 
+<!-- Passive Components-->
+  <import_component_type>CubeRover/ComLogger/ComLoggerComponentAi.xml</import_component_type>
+
 
 <!-- Component exclusive to CubeRover -->
 
@@ -37,6 +40,9 @@
 <!-- Declaration of the passive text logger component that logs events in non-volatile memory -->
 <!-- For CubeRover - we use external FRAM memory to store data, i.e. a custom implementation of that component is necessary -->
   <instance namespace="Svc" name="activeLogger" type="ActiveLogger" base_id="141" base_id_window="20" />
+
+<!-- Declaration of the communications logger -->
+  <instance namespace="CubeRover" name="comLogger" type="ComLogger" base_id="161" base_id_window="20" /> 
 
 
 <!-- *********************************************************************************************************

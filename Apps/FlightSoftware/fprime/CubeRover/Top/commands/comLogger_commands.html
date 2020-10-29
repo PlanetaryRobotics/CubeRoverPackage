@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>comLogger:ComLogger Component Dictionary</title>
+</head>
+<body>
+
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 5px;
+}
+th {
+    text-align: left;
+}
+html {
+    font-family: Arial, sans-serif ;
+    font-size: 90% ;
+}
+</style>
+
+
+<h1><b>Command: comLogger:ComLogger</b></h1>
+
+
+
+<table>
+	<thead>
+		<tr style = "border-right: 2px solid black; border-left: 2px solid black; border-top: 2px solid black;">
+			<th rowspan = "2">Mnemonic</th>
+			<th rowspan = "2">ID</th>
+			<th rowspan = "2">Description</th>
+			<th rowspan = "1" colspan = "3">Arguments</th>
+		</tr>
+		<tr style = "border-right: 2px solid black; ">
+			<th>Argument</th>
+			<th>Type</th>
+			<th>Description</th>
+		<tr>
+	</thead>
+	<tbody>
+
+		<tr style = "border: 2px solid black;">
+			<td rowspan="1">CloseFile</td>
+			<td rowspan="1">161 (0xa1)</td>
+			<td rowspan="1">Forces a close of the currently opened file.</td>
+				<td></td>
+				<td></td>
+				<td></td>
+		</tr>
+		<tr style = "border: 2px solid black;">
+			<td rowspan="1">SendAllLogs</td>
+			<td rowspan="1">162 (0xa2)</td>
+			<td rowspan="1">Sends all logs from flash to Ground</td>
+				<td></td>
+				<td></td>
+				<td></td>
+		</tr>
+		<tr style = "border: 2px solid black;">
+			<td rowspan="3">SendSetofLogs</td>
+			<td rowspan="3">163 (0xa3)</td>
+			<td rowspan="3">Sends a set of logs from flash to Ground</td>
+					<tr style = "border-right: 2px solid black;border-top: 2px solid black;">
+						<td>start</td>
+						<td>U32</td>
+						<td>The start time (seconds) for a log</td>
+					</tr>
+					<tr style = "border-right: 2px solid black;border-bottom: 2px solid black;">
+						<td>end</td>
+						<td>U32</td>
+						<td>The end time (seconds) for a log</td>
+					</tr>
+		</tr>
+	</tbody>
+</table>
+
+
+</body>
+</html>

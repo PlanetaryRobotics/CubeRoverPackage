@@ -19,6 +19,7 @@
 #include <Svc/TlmChan/TlmChanImpl.hpp>
 #include <Svc/ActiveLogger/ActiveLoggerImpl.hpp>
 #include <Svc/CmdDispatcher/CommandDispatcherImpl.hpp>
+#include <CubeRover/ComLogger/ComLogger.hpp>
 
 // Block driver sequencing F-Prime and other sync events
 extern Drv::BlockDriverImpl blockDriver;
@@ -42,5 +43,8 @@ extern Svc::ActiveLoggerImpl activeLogger;
 
 // FreeRTOS Serial driver to interface radio module
 extern Drv::FreeRtosSerialDriverComponentImpl radioSerialInterface;
+
+// Com Logger
+extern CubeRover::ComLogger comLogger;
 
 #endif /* F_PRIME_CUBEROVER_TOP_COMPONENTS_HPP_ */

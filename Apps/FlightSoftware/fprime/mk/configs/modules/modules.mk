@@ -50,7 +50,6 @@ SVC_MODULES := \
 	Svc/ActiveRateGroup \
 	Svc/RateGroupDriver \
 	Svc/Sched \
-	Svc/ComLogger \
 	Svc/SocketGndIf \
 	Svc/TlmChan \
 	Svc/PassiveTextLogger \
@@ -204,6 +203,7 @@ acdev_MODULES := \
 CubeRover_MODULES := \
 	CubeRover/Top \
 	CubeRover/CubeRoverPorts \
+	CubeRover/ComLogger \
 	$(FW_MODULES) \
 	$(OS_MODULES) \
 	$(SVC_MODULES) \
