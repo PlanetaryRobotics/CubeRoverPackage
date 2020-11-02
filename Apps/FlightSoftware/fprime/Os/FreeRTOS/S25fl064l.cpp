@@ -21,6 +21,8 @@ S25fl064l :: S25fl064l(){
   m_addressLengthFormat = S25fl064l::ADDRESS_LENGTH_3_BYTES; 
 }
 
+// Destructor: DO NOT USE
+S25fl064l :: ~S25fl064l(){}
 
 /**
  * @brief      The fucntion sets up the flash memory component

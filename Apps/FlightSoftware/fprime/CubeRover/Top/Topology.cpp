@@ -88,7 +88,15 @@ Svc::ActiveLoggerImpl activeLogger(
 #endif
   );
 
-
+// ---------------------------------------------------------------------------
+// Active logger data component used to log system events
+CubeRover::ComLogger comLogger(
+#if FW_OBJECT_NAMES == 1
+        "ComLogger",
+#endif
+        "",
+        1024
+  );
 
 /**
  * @brief      Run 1 cycle (debug)
@@ -146,4 +154,6 @@ void constructApp(void){
   activeLogger.start(ACTIVE_LOGGER_ID, /* identifier */
                      ACTIVE_LOGGER_AFF, /* CPU priority  */
                      ACTIVE_LOGGER_QUEUE_DEPTH*MIN_STACK_SIZE_BYTES); /* stack size */
+
+  comLogger.init(0,0);
 }

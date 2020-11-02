@@ -23,7 +23,7 @@
 +extern Svc::TlmChanImpl tlmChan;
 +extern Svc::CommandDispatcherImpl cmdDispatcher;
 +extern Svc::ActiveLoggerImpl activeLogger;
-+extern CubeRover::ComLoggerImpl comLogger;
++extern CubeRover::ComLogger comLogger;
 
 
  

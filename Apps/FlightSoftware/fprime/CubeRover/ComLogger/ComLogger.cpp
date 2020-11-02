@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-using namespace std;
 
 namespace CubeRover {
 
@@ -76,7 +75,7 @@ namespace CubeRover {
       this->file.close();
 
       // Write out the hash file to disk:
-      this->writeHashFile();
+      //this->writeHashFile();
 
       // Update mode:
       this->fileMode = CLOSED;
@@ -347,7 +346,7 @@ namespace CubeRover {
       this->file.close();
 
       // Write out the hash file to disk:
-      this->writeHashFile();
+      //this->writeHashFile();
 
       // Update mode:
       this->fileMode = CLOSED;
@@ -403,7 +402,7 @@ namespace CubeRover {
     writeErrorOccured = false;
     return true;
   }
-
+/*
   void ComLogger :: 
     writeHashFile(
     )
@@ -416,7 +415,7 @@ namespace CubeRover {
       this->log_WARNING_LO_FileValidationError(logStringArg1, logStringArg2, validateStatus);
     }
   }
-
+*/
 
   bool ComLogger :: 
     readFromFile(

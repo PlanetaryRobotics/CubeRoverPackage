@@ -160,10 +160,10 @@ namespace CubeRover {
         void* data, 
         U16 length
       );
-
+/*
       void writeHashFile(
       );
-
+*/
       void readFiletoComBuffer(
         Fw::ComBuffer &data,
         U32 size

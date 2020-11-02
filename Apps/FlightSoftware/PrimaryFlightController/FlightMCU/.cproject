@@ -75,6 +75,7 @@
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.ti.ccstudio.buildDefinitions.TMS470_18.12.linkerID.LIBRARY.1637489225" name="Include library file or command file as input (--library, -l)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.12.linkerID.LIBRARY" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="rtsv7R4_T_le_v3D16_eabi.lib"/>
+									<listOptionValue builtIn="false" value="libUtilsHash.a"/>
 									<listOptionValue builtIn="false" value="libDrvFreeRtosSerialDriver.a"/>
 									<listOptionValue builtIn="false" value="libSvcActiveRateGroup.a"/>
 									<listOptionValue builtIn="false" value="libDrvBlockDriver.a"/>

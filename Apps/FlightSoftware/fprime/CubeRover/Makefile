@@ -2,7 +2,7 @@
 DEPLOYMENT := CubeRover
 BUILD_ROOT ?= $(PWD)/..
 
-MODULES = Top
+MODULES = Top ComLogger
 
 export BUILD_ROOT
 
