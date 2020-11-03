@@ -22,7 +22,7 @@ S25fl064l :: S25fl064l(){
 }
 
 // Destructor: DO NOT USE
-S25fl064l :: ~S25fl064l(){}
+//S25fl064l :: ~S25fl064l(){}
 
 /**
  * @brief      The fucntion sets up the flash memory component

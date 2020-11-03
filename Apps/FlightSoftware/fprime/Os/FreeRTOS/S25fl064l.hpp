@@ -270,7 +270,7 @@ class S25fl064l{
   // Functions specific to external memory
   public:
     S25fl064l();
-    ~S25fl064l();
+    //~S25fl064l();
     S25fl064lError writeDataToFlash(S25fl064l::MemAlloc *alloc,
                                const uint32_t offset,
                                uint8_t *data,
