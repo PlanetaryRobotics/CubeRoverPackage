@@ -18,7 +18,7 @@
 #define NAME_MAX 255
 #define PATH_MAX 4096
 #define MAX_FILE_SIZE 100
-#define MAX_NUM_FILES 500
+#define MAX_NUM_FILES 2
 #endif
 #include <stdio.h>
 #include <cstdarg>
