@@ -149,103 +149,28 @@ namespace CubeRover {
     // Go through all files and send the contents to Ground
     for(U32 file_index = this->file_start; file_index != this->file_end; file_index++)
     {
-        //check if file_index is larger than array
-        if(file_index >= MAX_NUM_FILES)
-          file_index = 0; 
-
         // Create a ComBuffer called data to store logs read from flash
         Fw::ComBuffer data;
 
+        // Create string to search for in file
+        char* file_name = itoa(file_index) + ".com";
+
         // Open the file designated by file_index
-        Os::File::Status ret = file.open((char*) this->file_loc[file_index].fileName, Os::File::OPEN_READ);
+        Os::File::Status ret = file.open(file_name, Os::File::OPEN_READ);
 
-        if( Os::File::OP_OK != ret ) {
-          if( !openErrorOccured ) { // throttle this event, otherwise a positive 
-                                    // feedback event loop can occur!
-            Fw::LogStringArg logStringArg((char*) this->fileName);
-            this->log_WARNING_HI_FileOpenError(ret, logStringArg);
-          }
-          openErrorOccured = true;
-        } 
-        else {
-          // Reset event throttle:
-          openErrorOccured = false;
-
-          // If file is Open, then we read to the ComBuffer Data
-          this->readFiletoComBuffer(data, this->maxFileSize);
-          
-          // Put logs into ground output buffer and send them out
-          // *NOTE* All logs should still be in serialized format since they were stored in serialized format
-          if (this->isConnected_GndOut_OutputPort(0)) {
-                  this->GndOut_out(0, data,0);
-              }
-        }
-    }
-    // Send Output buffer to ground
-    this->cmdResponse_out(opCode,cmdSeq,Fw::COMMAND_OK);
-  }
-
-  void ComLogger ::
-    SendSetofLogs_cmdHandler(
-        const FwOpcodeType opCode,
-        const U32 cmdSeq,
-        U32 start,
-        U32 end
-    )
-  {
-    char time_buff[MAX_FILENAME_SIZE + MAX_PATH_SIZE];
-    // Parse time for earliest log
-    parseSeconds(time_buff, this->file_loc[this->file_start].fileName);
-    // Convert time to U32
-    U32 start_time = static_cast<U32> (atoi(time_buff));
-
-    //clear time_buff
-    memset(time_buff, 0, sizeof(time_buff));
-
-    // Parse time for most recent log
-    parseSeconds(time_buff, this->file_loc[this->file_end].fileName);
-    // Convert time to U32
-    U32 end_time = static_cast<U32> (atoi(time_buff));
-
-    if(start < start_time || end > end_time)
-    {
-      Fw::LogStringArg logStringArg1((char*) start);
-      Fw::LogStringArg logStringArg2((char*) end);
-      this->log_WARNING_LO_TimeNotAvaliable(logStringArg1, logStringArg2);
-    }
-
-    // Go through all files and send the contents to Ground
-    for(U32 file_index = this->file_start; file_index != this->file_end; file_index++)
-    {
-        //check if file_index is larger than array
-        if(file_index >= MAX_NUM_FILES)
-          file_index = 0; 
-        
-        //clear time_buff
-        memset(time_buff, 0, sizeof(time_buff));
-
-        // Parse time for current index log
-        parseSeconds(time_buff, this->file_loc[file_index].fileName);
-        // Convert time to U32
-        U32 index_time = static_cast<U32> (atoi(time_buff));
-
-        //check if index is within start and end 
-        if(index_time >= start && index_time <= end)
-        {
-          // Create a ComBuffer called data to store logs read from flash
-          Fw::ComBuffer data;
-
-          // Open the file designated by file_index
-          Os::File::Status ret = file.open((char*) this->file_loc[file_index].fileName, Os::File::OPEN_READ);
-
-          if( Os::File::OP_OK != ret ) {
+         if( Os::File::OP_OK != ret && Os::File::DOESNT_EXIST != ret) {
             if( !openErrorOccured ) { // throttle this event, otherwise a positive 
                                       // feedback event loop can occur!
               Fw::LogStringArg logStringArg((char*) this->fileName);
               this->log_WARNING_HI_FileOpenError(ret, logStringArg);
             }
             openErrorOccured = true;
-          } 
+          }
+          else if( Os::File::DOESNT_EXIST == ret) {
+            // File doesn't exist, do nothing
+            // Reset event throttle:
+            openErrorOccured = false;
+          }  
           else {
             // Reset event throttle:
             openErrorOccured = false;
@@ -259,7 +184,85 @@ namespace CubeRover {
                     this->GndOut_out(0, data,0);
                 }
           }
-        }
+    }
+    // Send Output buffer to ground
+    this->cmdResponse_out(opCode,cmdSeq,Fw::COMMAND_OK);
+  }
+
+  void ComLogger ::
+    SendSetofLogs_cmdHandler(
+        const FwOpcodeType opCode,
+        const U32 cmdSeq,
+        U32 start,
+        U32 end
+    )
+  {
+  	U32 true_start = this->file_start;
+	U32 true_end = this->file_end;
+	//check if start value is valid
+	if(start >= this->file_start && start <= this->file_end)
+		true_start = start;
+	//check if start is above file end
+	else if(start > this->file_end)
+	{
+		this->log_WARNING_LO_TimeNotAvaliable(itoa(start), itoa(end));
+		//return as start time not valid
+		return;
+	}
+	else
+		this->log_WARNING_LO_TimeNotAvaliable(itoa(start), itoa(end));
+
+	//check if end value is valid
+	if(end >= this->file_start && end <= this->file_end)
+		true_end = end;
+	//check if end is below file start
+	else if(end < this->file_start)
+	{
+		this->log_WARNING_LO_TimeNotAvaliable(itoa(start), itoa(end));
+		//return as end time not valid
+		return;
+	}
+	else
+		this->log_WARNING_LO_TimeNotAvaliable(itoa(start), itoa(end));
+
+    // Go through all files and send the contents to Ground
+    for(U32 file_index = true_start; file_index != true_end; file_index++)
+    {
+          // Create a ComBuffer called data to store logs read from flash
+          Fw::ComBuffer data;
+
+          // Create string to search for in file
+          char* file_name = itoa(file_index) + ".com";
+
+          // Open the file designated by file_index
+          Os::File::Status ret = file.open(file_name, Os::File::OPEN_READ);
+
+          if( Os::File::OP_OK != ret && Os::File::DOESNT_EXIST != ret) {
+            if( !openErrorOccured ) { // throttle this event, otherwise a positive 
+                                      // feedback event loop can occur!
+              Fw::LogStringArg logStringArg((char*) this->fileName);
+              this->log_WARNING_HI_FileOpenError(ret, logStringArg);
+            }
+            openErrorOccured = true;
+          }
+          else if( Os::File::DOESNT_EXIST == ret) {
+            // File doesn't exist, do nothing
+            // Reset event throttle:
+            openErrorOccured = false;
+          }  
+          else {
+            // Reset event throttle:
+            openErrorOccured = false;
+
+            // If file is Open, then we read to the ComBuffer Data
+            this->readFiletoComBuffer(data, this->maxFileSize);
+            
+            // Put logs into ground output buffer and send them out
+            // *NOTE* All logs should still be in serialized format since they were stored in serialized format
+            if (this->isConnected_GndOut_OutputPort(0)) {
+                    this->GndOut_out(0, data,0);
+                }
+          }
     }
 
     // Send Output buffer to ground
@@ -287,17 +290,12 @@ namespace CubeRover {
     // Create filename:
     Fw::Time timestamp = getTime();
     memset(this->fileName, 0, sizeof(this->fileName));
-    bytesCopied = snprintf((char*) this->fileName, sizeof(this->fileName), "%d_%d.com", 
-      timestamp.getSeconds(), (U32) timestamp.getTimeBase());
+    bytesCopied = snprintf((char*) this->fileName, sizeof(this->fileName), "%d.com", 
+      timestamp.getSeconds());
 
     // "A return value of size or more means that the output was truncated"
     // See here: http://linux.die.net/man/3/snprintf
     FW_ASSERT( bytesCopied < sizeof(this->fileName) );
-
-    // Create sha filename:
-    bytesCopied = snprintf((char*) this->hashFileName, sizeof(this->hashFileName), "%d_%d.com%s", 
-      timestamp.getSeconds(), (U32) timestamp.getTimeBase(), Utils::Hash::getFileExtensionString());
-    FW_ASSERT( bytesCopied < sizeof(this->hashFileName) );
 
     Os::File::Status ret = file.open((char*) this->fileName, Os::File::OPEN_WRITE);
     if( Os::File::OP_OK != ret ) {
@@ -317,23 +315,16 @@ namespace CubeRover {
       // Set mode:
       this->fileMode = OPEN; 
 
-      // Copy fileName into file location list at the file_end spot 
-      memcpy(&this->file_loc[this->file_end].fileName, &this->fileName, sizeof(this->fileName));
+      // Set file start/end to time
+      if(this->file_start == 0)
+      	this->file_start = timestamp.getSeconds();
 
-      //increment file_end for next open file
-      this->file_end++;
+      else
+      	this->file_end = timestamp.getSeconds();
 
-      //check if file_end is greater than the array, if so, we set it back to zero
-      if(this->file_end >= MAX_NUM_FILES)
-          this->file_end = 0;
-
-      //check if file_end and file_start are equal, increment file_start
-      if(this->file_start == this->file_end)
-          this->file_start++;
-
-      //check if file_start is greater than the array
-      if(this->file_start >= MAX_NUM_FILES)
-          this->file_start = 0;
+      if(this->file_end == 0)
+      	this->file_end = timestamp.getSeconds();
+      // TODO : NEED TO FIGURE OUT HOW TO MOVE file_start UP WHEN IT IS OVERWRITTEN
     }    
   }
 
@@ -447,21 +438,5 @@ namespace CubeRover {
   {
     // Read file to buffer:
     readFromFile(data.getBuffAddr(), size);
-  }
-
-  void ComLogger ::
-      parseSeconds(
-        char temp_buffer[MAX_FILENAME_SIZE + MAX_PATH_SIZE],
-        U8 fileName[MAX_FILENAME_SIZE + MAX_PATH_SIZE]
-      )
-  {
-      for(unsigned int i = 0; i < sizeof(fileName); i++)
-      {
-          char temp_char = (char)fileName[i];
-          if(temp_char == '_')
-              return;
-          else
-              temp_buffer[i] = temp_char;
-      }
   };
 }

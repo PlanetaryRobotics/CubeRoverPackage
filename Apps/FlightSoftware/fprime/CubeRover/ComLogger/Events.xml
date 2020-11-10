@@ -65,7 +65,7 @@
     </args>
   </event>
 
-  <event id="0x04" name="TimeNotAvaliable" severity="WARNING_LO" format_string="Requested Time %s to %s Not Saved in Flash">
+  <event id="0x04" name="TimeNotAvaliable" severity="WARNING_LO" format_string=" Some or all of Requested Time %s to %s Not Saved in Flash">
     <comment>Time sent by ground not currently stored in memory</comment>
     <args>
       <arg name="start" type="string" size="240">
