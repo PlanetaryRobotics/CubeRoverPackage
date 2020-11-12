@@ -147,13 +147,15 @@ namespace CubeRover {
     // Get logs from flash
 
     // Go through all files and send the contents to Ground
-    for(U32 file_index = this->file_start; file_index != this->file_end; file_index++)
+    for(U32 file_index = this->file_start; file_index <= this->file_end; ++file_index)
     {
         // Create a ComBuffer called data to store logs read from flash
         Fw::ComBuffer data;
 
         // Create string to search for in file
-        char* file_name = itoa(file_index) + ".com";
+        char file_name[MAX_FILENAME_SIZE];
+        itoa(static_cast<int>(file_index), file_name, 10);
+        file_name.append(".com");
 
         // Open the file designated by file_index
         Os::File::Status ret = file.open(file_name, Os::File::OPEN_READ);
@@ -166,7 +168,7 @@ namespace CubeRover {
             }
             openErrorOccured = true;
           }
-          else if( Os::File::DOESNT_EXIST == ret) {
+          else if(Os::File::DOESNT_EXIST == ret) {
             // File doesn't exist, do nothing
             // Reset event throttle:
             openErrorOccured = false;
@@ -226,13 +228,15 @@ namespace CubeRover {
 		this->log_WARNING_LO_TimeNotAvaliable(itoa(start), itoa(end));
 
     // Go through all files and send the contents to Ground
-    for(U32 file_index = true_start; file_index != true_end; file_index++)
+    for(U32 file_index = true_start; file_index != true_end; ++file_index)
     {
           // Create a ComBuffer called data to store logs read from flash
           Fw::ComBuffer data;
 
           // Create string to search for in file
-          char* file_name = itoa(file_index) + ".com";
+          char file_name[MAX_FILENAME_SIZE];
+          itoa(static_cast<int>(file_index), file_name, 10);
+          file_name.append(".com");
 
           // Open the file designated by file_index
           Os::File::Status ret = file.open(file_name, Os::File::OPEN_READ);
@@ -316,15 +320,46 @@ namespace CubeRover {
       this->fileMode = OPEN; 
 
       // Set file start/end to time
-      if(this->file_start == 0)
+      if(this->file_start == 0 && this->file_end == 0)
+      {
       	this->file_start = timestamp.getSeconds();
-
+      	this->file_start_add = getFileStartAddress();
+      	this->file_end = timestamp.getSeconds();
+      	this->file_end_add = getFileStartAddress();
+      	//must return or will pass looped in memory code
+      	return;
+      }
+      // Otherwise update file end 
       else
+      {
       	this->file_end = timestamp.getSeconds();
+      	this->file_end_add = getFileStartAddress();
+      }
 
-      if(this->file_end == 0)
-      	this->file_end = timestamp.getSeconds();
-      // TODO : NEED TO FIGURE OUT HOW TO MOVE file_start UP WHEN IT IS OVERWRITTEN
+      // Check if we have looped in memory, if so then we need to update file_start to the next file
+      if(this->file_start_add >= this->file_end_add)
+      {
+      	U32 next_file_start = (this->file_start)++;
+      	// Create string to search for in file
+        char file_name[MAX_FILENAME_SIZE];
+        itoa(static_cast<int>(next_file_start), file_name, 10);
+        file_name.append(".com");
+
+		// Loop through files until we find the next file that exists
+      	while(file.open(file_name, Os::File::OPEN_READ) == Os::File::DOESNT_EXIST)
+      	{
+      		next_file_start++;
+      		itoa(static_cast<int>(next_file_start), file_name, 10);
+        	file_name.append(".com");
+      	}
+
+      	// Update file_start
+      	this->file_start = next_file_start;
+      	this->file_start_add = getFileStartAddress();
+
+      	// Reopen file we wanted
+      	file.open((char*) this->fileName, Os::File::OPEN_WRITE);
+      }
     }    
   }
 

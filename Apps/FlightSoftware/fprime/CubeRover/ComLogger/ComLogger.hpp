@@ -126,8 +126,10 @@ namespace CubeRover {
 
       //keep track of earliest file
       U32 file_start;
+      StartAddress file_start_add;
       //keep track of most recent file
       U32 file_end;
+      StartAddress file_end_add;
 
       FileMode fileMode;
       Os::File file;
@@ -172,11 +174,6 @@ namespace CubeRover {
       bool readFromFile(
         void* buffer,
         U32 length
-      );
-
-      void parseSeconds(
-        char temp_buffer[MAX_FILENAME_SIZE + MAX_PATH_SIZE],
-        U8 fileName[MAX_FILENAME_SIZE + MAX_PATH_SIZE]
       );
   };
 };

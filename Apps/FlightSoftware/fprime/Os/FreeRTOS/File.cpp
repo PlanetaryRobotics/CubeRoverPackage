@@ -401,4 +401,16 @@ namespace Os {
   File::Status File::calculateCRC32(U32 &crc){
     return OP_OK;
   }
+
+  /**
+   * @brief      Returns the File Start Address of currently open file
+   *
+   * @param      none
+   *
+   * @return     The start address of the File
+   */
+  StartAddress getFileStartAddress()
+  {
+    return this->m_fileStartAddress;
+  }
 }

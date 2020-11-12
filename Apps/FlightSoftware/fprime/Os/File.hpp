@@ -69,6 +69,9 @@ namespace Os {
 
             static Status niceCRC32(U32 &crc, const char* fileName); //!< Calculates CRC32 of file, not burdening FS
 
+            //Return the file start address if asked
+            StartAddress getFileStartAddress();
+
         private:
 
             NATIVE_INT_TYPE m_fd; //!<  Stored file descriptor
