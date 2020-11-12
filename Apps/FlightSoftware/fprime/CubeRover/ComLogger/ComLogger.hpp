@@ -126,10 +126,10 @@ namespace CubeRover {
 
       //keep track of earliest file
       U32 file_start;
-      StartAddress file_start_add;
+      AddressPointer file_start_add;
       //keep track of most recent file
       U32 file_end;
-      StartAddress file_end_add;
+      AddressPointer file_end_add;
 
       FileMode fileMode;
       Os::File file;

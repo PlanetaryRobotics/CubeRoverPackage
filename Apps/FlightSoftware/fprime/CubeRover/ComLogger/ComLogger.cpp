@@ -154,8 +154,8 @@ namespace CubeRover {
 
         // Create string to search for in file
         char file_name[MAX_FILENAME_SIZE];
-        itoa(static_cast<int>(file_index), file_name, 10);
-        file_name.append(".com");
+        sprintf(file_name, "%d", file_index);
+        strcat(file_name, ".com");
 
         // Open the file designated by file_index
         Os::File::Status ret = file.open(file_name, Os::File::OPEN_READ);
@@ -207,12 +207,12 @@ namespace CubeRover {
 	//check if start is above file end
 	else if(start > this->file_end)
 	{
-		this->log_WARNING_LO_TimeNotAvaliable(itoa(start), itoa(end));
+		this->log_WARNING_LO_TimeNotAvaliable(start, end);
 		//return as start time not valid
 		return;
 	}
 	else
-		this->log_WARNING_LO_TimeNotAvaliable(itoa(start), itoa(end));
+		this->log_WARNING_LO_TimeNotAvaliable(start, end);
 
 	//check if end value is valid
 	if(end >= this->file_start && end <= this->file_end)
@@ -220,12 +220,12 @@ namespace CubeRover {
 	//check if end is below file start
 	else if(end < this->file_start)
 	{
-		this->log_WARNING_LO_TimeNotAvaliable(itoa(start), itoa(end));
+		this->log_WARNING_LO_TimeNotAvaliable(start, end);
 		//return as end time not valid
 		return;
 	}
 	else
-		this->log_WARNING_LO_TimeNotAvaliable(itoa(start), itoa(end));
+		this->log_WARNING_LO_TimeNotAvaliable(start, end);
 
     // Go through all files and send the contents to Ground
     for(U32 file_index = true_start; file_index != true_end; ++file_index)
@@ -235,8 +235,8 @@ namespace CubeRover {
 
           // Create string to search for in file
           char file_name[MAX_FILENAME_SIZE];
-          itoa(static_cast<int>(file_index), file_name, 10);
-          file_name.append(".com");
+          sprintf(file_name, "%d", file_index);
+          strcat(file_name, ".com");
 
           // Open the file designated by file_index
           Os::File::Status ret = file.open(file_name, Os::File::OPEN_READ);
@@ -323,9 +323,9 @@ namespace CubeRover {
       if(this->file_start == 0 && this->file_end == 0)
       {
       	this->file_start = timestamp.getSeconds();
-      	this->file_start_add = getFileStartAddress();
+      	this->file_start_add = file.getFileStartAddress();
       	this->file_end = timestamp.getSeconds();
-      	this->file_end_add = getFileStartAddress();
+      	this->file_end_add = file.getFileStartAddress();
       	//must return or will pass looped in memory code
       	return;
       }
@@ -333,7 +333,7 @@ namespace CubeRover {
       else
       {
       	this->file_end = timestamp.getSeconds();
-      	this->file_end_add = getFileStartAddress();
+      	this->file_end_add = file.getFileStartAddress();
       }
 
       // Check if we have looped in memory, if so then we need to update file_start to the next file
@@ -342,20 +342,20 @@ namespace CubeRover {
       	U32 next_file_start = (this->file_start)++;
       	// Create string to search for in file
         char file_name[MAX_FILENAME_SIZE];
-        itoa(static_cast<int>(next_file_start), file_name, 10);
-        file_name.append(".com");
+        sprintf(file_name, "%d", next_file_start);
+        strcat(file_name, ".com");
 
 		// Loop through files until we find the next file that exists
       	while(file.open(file_name, Os::File::OPEN_READ) == Os::File::DOESNT_EXIST)
       	{
       		next_file_start++;
-      		itoa(static_cast<int>(next_file_start), file_name, 10);
-        	file_name.append(".com");
+      		sprintf(file_name, "%d", next_file_start);
+        	strcat(file_name, ".com");
       	}
 
       	// Update file_start
       	this->file_start = next_file_start;
-      	this->file_start_add = getFileStartAddress();
+      	this->file_start_add = file.getFileStartAddress();
 
       	// Reopen file we wanted
       	file.open((char*) this->fileName, Os::File::OPEN_WRITE);

@@ -409,7 +409,7 @@ namespace Os {
    *
    * @return     The start address of the File
    */
-  StartAddress getFileStartAddress()
+  AddressPointer File::getFileStartAddress(void)
   {
     return this->m_fileStartAddress;
   }

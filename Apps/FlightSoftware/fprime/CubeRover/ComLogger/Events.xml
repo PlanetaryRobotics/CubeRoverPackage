@@ -65,13 +65,13 @@
     </args>
   </event>
 
-  <event id="0x04" name="TimeNotAvaliable" severity="WARNING_LO" format_string=" Some or all of Requested Time %s to %s Not Saved in Flash">
+  <event id="0x04" name="TimeNotAvaliable" severity="WARNING_LO" format_string=" Some or all of Requested Time %u to %u Not Saved in Flash">
     <comment>Time sent by ground not currently stored in memory</comment>
     <args>
-      <arg name="start" type="string" size="240">
+      <arg name="start" type="U32">
         <comment>The start time requested by ground</comment>
       </arg>
-      <arg name="end" type="string" size="240">
+      <arg name="end" type="U32">
         <comment>The end time requested by ground</comment>
       </arg>
     </args>

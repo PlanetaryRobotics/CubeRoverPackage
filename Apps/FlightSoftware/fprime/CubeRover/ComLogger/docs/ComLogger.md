@@ -32,8 +32,8 @@
 |FileClosed|3 (0x3)|The ComLogger successfully closed a file on command.| | | | |
 | | | |file|Fw::LogStringArg&|240|The file|
 |TimeNotAvaliable|4 (0x4)|Time sent by ground not currently stored in memory| | | | |
-| | | |start|Fw::LogStringArg&|240|The start time requested by ground|
-| | | |end|Fw::LogStringArg&|240|The end time requested by ground|
+| | | |start|U32||The start time requested by ground|
+| | | |end|U32||The end time requested by ground|
 |FileReadError|5 (0x5)|The ComLogger encountered an error reading a file| | | | |
 | | | |errornum|U32||The error number returned from write file|
 | | | |bytesReading|U32||The number of bytes to read|
