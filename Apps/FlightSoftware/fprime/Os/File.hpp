@@ -70,7 +70,7 @@ namespace Os {
             static Status niceCRC32(U32 &crc, const char* fileName); //!< Calculates CRC32 of file, not burdening FS
 
             //Return the file start address if asked
-            AddressPointer getFileStartAddress();
+            U32 getFileStartAddress();
 
         private:
 

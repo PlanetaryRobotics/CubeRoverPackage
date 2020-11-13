@@ -71,4 +71,27 @@
         </port>
     </ports>
 
+    <telemetry>
+        <channel id="0" name="BYTES_READ" data_type="U32">
+            <comment>
+                Number of bytes read from flash
+            </comment>
+        </channel>
+        <channel id="1" name="BYTES_WRITTEN" data_type="U32">
+            <comment>
+                Number of bytes written to flash
+            </comment>
+        </channel>
+        <channel id="2" name="READ_ADDRESS" data_type="U32">
+            <comment>
+                Previous Address Read from flash
+            </comment>
+        </channel>
+        <channel id="3" name="WRITE_ADDRESS" data_type="U32">
+            <comment>
+                Previous Address written to flash
+            </comment>
+        </channel>
+    </telemetry>
+
 </component>

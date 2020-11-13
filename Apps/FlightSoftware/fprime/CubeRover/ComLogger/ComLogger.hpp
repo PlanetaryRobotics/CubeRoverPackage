@@ -116,20 +116,17 @@ namespace CubeRover {
           OPEN = 1
       };
 
-      //create struct to make an array of filenames
-      /*struct fileList{
-        U8 fileName[MAX_FILENAME_SIZE + MAX_PATH_SIZE];
-      };*/
-
-      //create array of file names
-      //struct fileList file_loc[MAX_NUM_FILES];
+      // Total number of bytes read
+      U32 bytes_read;
+      // Total number of bytes written
+      U32 bytes_written;
 
       //keep track of earliest file
       U32 file_start;
-      AddressPointer file_start_add;
+      U32 file_start_add;
       //keep track of most recent file
       U32 file_end;
-      AddressPointer file_end_add;
+      U32 file_end_add;
 
       FileMode fileMode;
       Os::File file;

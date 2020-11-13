@@ -12,6 +12,14 @@
 | | | |start|U32|The start time (seconds) for a log|
 | | | |end|U32|The end time (seconds) for a log|
 
+## Telemetry Channel List
+
+|Channel Name|ID|Type|Description|
+|---|---|---|---|
+|BYTES_READ|0 (0x0)|U32|Number of bytes read from flash|
+|BYTES_WRITTEN|1 (0x1)|U32|Number of bytes written to flash|
+|READ_ADDRESS|2 (0x2)|U32|Previous Address Read from flash|
+|WRITE_ADDRESS|3 (0x3)|U32|Previous Address written to flash|
 
 ## Event List
 

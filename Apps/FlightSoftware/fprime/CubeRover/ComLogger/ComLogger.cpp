@@ -50,6 +50,8 @@ namespace CubeRover {
     FW_ASSERT(dest == this->filePrefix, reinterpret_cast<U64>(dest), reinterpret_cast<U64>(this->filePrefix));
     this->file_start = 0;
     this->file_end = 0;
+    this->bytes_read = 0;
+    this->bytes_written = 0;
   }
 
   void ComLogger :: 
@@ -154,6 +156,7 @@ namespace CubeRover {
 
         // Create string to search for in file
         char file_name[MAX_FILENAME_SIZE];
+        memset(file_name, '\0', sizeof(file_name));
         sprintf(file_name, "%d", file_index);
         strcat(file_name, ".com");
 
@@ -174,6 +177,9 @@ namespace CubeRover {
             openErrorOccured = false;
           }  
           else {
+          	// Update tlm on new read address
+      		this->tlmWrite_READ_ADDRESS(file.getFileStartAddress());
+
             // Reset event throttle:
             openErrorOccured = false;
 
@@ -235,6 +241,7 @@ namespace CubeRover {
 
           // Create string to search for in file
           char file_name[MAX_FILENAME_SIZE];
+          memset(file_name, '\0', sizeof(file_name));
           sprintf(file_name, "%d", file_index);
           strcat(file_name, ".com");
 
@@ -255,6 +262,9 @@ namespace CubeRover {
             openErrorOccured = false;
           }  
           else {
+          	// Update tlm on new read address
+      		this->tlmWrite_READ_ADDRESS(file.getFileStartAddress());
+
             // Reset event throttle:
             openErrorOccured = false;
 
@@ -310,6 +320,9 @@ namespace CubeRover {
       }
       openErrorOccured = true;
     } else {
+	  // Update tlm on new write address
+      this->tlmWrite_WRITE_ADDRESS(file.getFileStartAddress());
+
       // Reset event throttle:
       openErrorOccured = false;
 
@@ -337,21 +350,29 @@ namespace CubeRover {
       }
 
       // Check if we have looped in memory, if so then we need to update file_start to the next file
-      if(this->file_start_add >= this->file_end_add)
-      {
-      	U32 next_file_start = (this->file_start)++;
-      	// Create string to search for in file
-        char file_name[MAX_FILENAME_SIZE];
-        sprintf(file_name, "%d", next_file_start);
-        strcat(file_name, ".com");
+      U32 next_file_start = this->file_start;
+      // Create string to search for in file
+      char file_name[MAX_FILENAME_SIZE];
+      memset(file_name, '\0', sizeof(file_name));
+      sprintf(file_name, "%d", next_file_start);
+      strcat(file_name, ".com");
 
+      if(file.open(file_name, Os::File::OPEN_READ) == Os::File::DOESNT_EXIST)
+      {
+      	next_file_start++;
+      	memset(file_name, '\0', sizeof(file_name));
+      	sprintf(file_name, "%d", next_file_start);
+        strcat(file_name, ".com");
 		// Loop through files until we find the next file that exists
       	while(file.open(file_name, Os::File::OPEN_READ) == Os::File::DOESNT_EXIST)
       	{
       		next_file_start++;
+      		memset(file_name, '\0', sizeof(file_name));
       		sprintf(file_name, "%d", next_file_start);
         	strcat(file_name, ".com");
       	}
+      	// Update tlm on new read address
+      	this->tlmWrite_READ_ADDRESS(file.getFileStartAddress());
 
       	// Update file_start
       	this->file_start = next_file_start;
@@ -359,6 +380,8 @@ namespace CubeRover {
 
       	// Reopen file we wanted
       	file.open((char*) this->fileName, Os::File::OPEN_WRITE);
+      	// Update tlm on new write address
+      	this->tlmWrite_WRITE_ADDRESS(file.getFileStartAddress());
       }
     }    
   }
@@ -395,6 +418,10 @@ namespace CubeRover {
       serialLength.serialize(size);
       if(writeToFile(serialLength.getBuffAddr(), serialLength.getBuffLength())) {
         this->byteCount += serialLength.getBuffLength();
+        // Update total # bytes written
+        this->bytes_written += serialLength.getBuffLength();
+        // Update TLM for total bytes written
+        tlmWrite_BYTES_WRITTEN(this->bytes_written);
       }
       else {
         return;
@@ -404,6 +431,10 @@ namespace CubeRover {
     // Write buffer to file:
     if(writeToFile(data.getBuffAddr(), size)) {
       this->byteCount += size;
+      // Update total # bytes written
+      this->bytes_written += size;
+      // Update TLM for total bytes written
+      tlmWrite_BYTES_WRITTEN(this->bytes_written);
     }
   }
 
@@ -473,5 +504,9 @@ namespace CubeRover {
   {
     // Read file to buffer:
     readFromFile(data.getBuffAddr(), size);
+    // Update total # bytes written
+    this->bytes_read += size;
+    // Update TLM for total bytes written
+    tlmWrite_BYTES_READ(this->bytes_read);
   };
 }

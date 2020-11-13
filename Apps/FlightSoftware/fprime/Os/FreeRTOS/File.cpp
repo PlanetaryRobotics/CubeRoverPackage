@@ -409,8 +409,8 @@ namespace Os {
    *
    * @return     The start address of the File
    */
-  AddressPointer File::getFileStartAddress(void)
+  U32 File::getFileStartAddress(void)
   {
-    return this->m_fileStartAddress;
+    return static_cast<U32>(this->m_fileStartAddress);
   }
 }
