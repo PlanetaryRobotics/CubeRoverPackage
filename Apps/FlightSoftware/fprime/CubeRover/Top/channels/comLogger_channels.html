@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>comLogger:ComLogger Component Dictionary</title>
+</head>
+<body>
+
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 5px;
+}
+th {
+    text-align: left;
+}
+html {
+    font-family: Arial, sans-serif ;
+    font-size: 90% ;
+}
+</style>
+
+
+<h1><b>Telemetry Channels: comLogger:ComLogger</b></h1>
+<table>
+  <tr>
+     <th>Channel Name</th>
+     <th>ID</th>
+     <th>Type</th>
+     <th>Description</th>
+ </tr>
+
+ <tr>
+    <td>BYTES_READ</td>
+    <td>161 (0xa1)</td>
+    <td>U32</td>
+    <td>Number of bytes read from flash</td>
+ </tr>
+ <tr>
+    <td>BYTES_WRITTEN</td>
+    <td>162 (0xa2)</td>
+    <td>U32</td>
+    <td>Number of bytes written to flash</td>
+ </tr>
+ <tr>
+    <td>READ_ADDRESS</td>
+    <td>163 (0xa3)</td>
+    <td>U32</td>
+    <td>Previous Address Read from flash</td>
+ </tr>
+ <tr>
+    <td>WRITE_ADDRESS</td>
+    <td>164 (0xa4)</td>
+    <td>U32</td>
+    <td>Previous Address written to flash</td>
+ </tr>
+</table>
+</body>
+</html>

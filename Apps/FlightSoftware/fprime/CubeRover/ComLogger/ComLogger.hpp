@@ -11,7 +11,7 @@
 #include <Os/File.hpp>
 #include <Os/Mutex.hpp>
 #include <Fw/Types/Assert.hpp>
-#include <Utils/Hash/Hash.hpp>
+//#include <Utils/Hash/Hash.hpp>
 
 #include <limits.h>
 #ifdef __TI_ARM__   // TI ARM doesn't define limits.h
