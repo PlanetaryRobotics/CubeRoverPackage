@@ -125,6 +125,9 @@ void constructApp(void){
 
   activeLogger.init(ACTIVE_LOGGER_QUEUE_DEPTH, ACTIVE_LOGGER_ID);
 
+  // Initialize the comlogger component
+  comLogger.init(0,0);
+
   // Initialize the telemetric channel component (active)
   tlmChan.init(TLM_CHAN_QUEUE_DEPTH, TLM_CHAN_ID);
 
@@ -155,5 +158,4 @@ void constructApp(void){
                      ACTIVE_LOGGER_AFF, /* CPU priority  */
                      ACTIVE_LOGGER_QUEUE_DEPTH*MIN_STACK_SIZE_BYTES); /* stack size */
 
-  comLogger.init(0,0);
 }
