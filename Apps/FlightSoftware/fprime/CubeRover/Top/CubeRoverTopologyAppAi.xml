@@ -89,7 +89,16 @@
      *********************************************************************************************************
      -->
 
-<!-- *********************************************************************************************************
+<!-- 
+
+*********************************************************************************************************
+        CONNECTION BETWEEN HIGH FREQ RATE GROUP OUTPUT AND ALL DEPENDING COMPONENTS
+     *********************************************************************************************************
+     -->
+
+<!-- 
+
+*********************************************************************************************************
         CONNECTION OF TIME PORTS BETWEEN CUBEROVER TIME ALL TIME-STAMPED COMPONENTS
      ********************************************************************************************************* 
       -->
@@ -173,6 +182,12 @@
     <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
   </connection>
 
+    <!-- Test blockDriver to active logger -->
+  <connection name = "blockDriver_to_aLogger">
+    <source component = "blockDriver" port = "LogOut" type = "Log" num = "0" />
+    <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
+  </connection>
+
 
   <!-- *********************************************************************************************************
         CONNECTION OF MONITORED COMPONENTS TO TELEMETRIC ACTIVE LOGGER COMPONENT
@@ -197,4 +212,21 @@
     <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
   </connection>
   
+    <!-- Test blockDriver to active logger -->
+  <connection name = "blockDriver_to_aLogger">
+    <source component = "blockDriver" port = "LogOut" type = "Log" num = "0" />
+    <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
+  </connection>
+
+  <!-- *********************************************************************************************************
+        CONNECTION OF ACTIVE LOGGER TO COMLOGGER
+       ********************************************************************************************************* 
+      -->
+
+      <!-- Connection to pass logs from active logger to com logger -->
+  <connection name = "aLogger_to_comLogger">
+    <source component = "activeLogger" port = "PktSend" type = "Com" num = "0" />
+    <target component = "comLogger" port = "comIn" type = "Com" num = "0" />
+  </connection>
+
 </assembly>

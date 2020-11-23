@@ -95,13 +95,9 @@ namespace Svc {
 
         // File names for the different iterations:
         memset(fileName, 0, sizeof(fileName));
-        snprintf((char*) fileName, sizeof(fileName), "%s_%d_%d_%06d.com", FILE_STR, testTime.getTimeBase(), testTime.getSeconds(), testTime.getUSeconds());
-        memset(hashFileName, 0, sizeof(hashFileName));
-        snprintf((char*) hashFileName, sizeof(hashFileName), "%s_%d_%d_%06d.com%s", FILE_STR, testTime.getTimeBase(), testTime.getSeconds(), testTime.getUSeconds(), Utils::Hash::getFileExtensionString());
+        snprintf((char*) fileName, sizeof(fileName), "%d.com", testTime.getSeconds());
         memset(prevFileName, 0, sizeof(prevFileName));
-        snprintf((char*) prevFileName, sizeof(prevFileName), "%s_%d_%d_%06d.com", FILE_STR, testTime.getTimeBase(), testTimePrev.getSeconds(), testTimePrev.getUSeconds());
-        memset(prevHashFileName, 0, sizeof(prevHashFileName));
-        snprintf((char*) prevHashFileName, sizeof(prevHashFileName), "%s_%d_%d_%06d.com%s", FILE_STR, testTime.getTimeBase(), testTimePrev.getSeconds(), testTimePrev.getUSeconds(), Utils::Hash::getFileExtensionString());
+        snprintf((char*) prevFileName, sizeof(prevFileName), "%d.com", testTimePrev.getSeconds());
 
         // Set the test time to the current time:
         setTestTime(testTime);
@@ -177,13 +173,6 @@ namespace Svc {
         ASSERT_EQ(Os::File::OP_OK,ret);
         ASSERT_EQ(length, 0);
         file.close();
-
-        // Assert that the hashes match:
-        if( j > 0 ) {
-          Os::ValidateFile::Status status;
-          status = Os::ValidateFile::validate((char*) prevFileName, (char*) prevHashFileName);
-          ASSERT_EQ(Os::ValidateFile::VALIDATION_OK, status);
-        }
      }
   }
 
@@ -218,13 +207,9 @@ namespace Svc {
 
         // File names for the different iterations:
         memset(fileName, 0, sizeof(fileName));
-        snprintf((char*) fileName, sizeof(fileName), "%s_%d_%d_%06d.com", FILE_STR, testTime.getTimeBase(), testTime.getSeconds(), testTime.getUSeconds());
-        memset(hashFileName, 0, sizeof(hashFileName));
-        snprintf((char*) hashFileName, sizeof(hashFileName), "%s_%d_%d_%06d.com%s", FILE_STR, testTime.getTimeBase(), testTime.getSeconds(), testTime.getUSeconds(), Utils::Hash::getFileExtensionString());
+        snprintf((char*) fileName, sizeof(fileName), "%d.com", testTime.getSeconds());
         memset(prevFileName, 0, sizeof(prevFileName));
-        snprintf((char*) prevFileName, sizeof(prevFileName), "%s_%d_%d_%06d.com", FILE_STR, testTime.getTimeBase(), testTimePrev.getSeconds(), testTimePrev.getUSeconds());
-        memset(prevHashFileName, 0, sizeof(prevHashFileName));
-        snprintf((char*) prevHashFileName, sizeof(prevHashFileName), "%s_%d_%d_%06d.com%s", FILE_STR, testTime.getTimeBase(), testTimePrev.getSeconds(), testTimePrev.getUSeconds(), Utils::Hash::getFileExtensionString());
+        snprintf((char*) prevFileName, sizeof(prevFileName), "%d.com", testTimePrev.getSeconds());
 
         // Set the test time to the current time:
         setTestTime(testTime);
@@ -289,13 +274,6 @@ namespace Svc {
         ASSERT_EQ(Os::File::OP_OK,ret);
         ASSERT_EQ(length, 0);
         file.close();
-
-        // Assert that the hashes match:
-        if( j > 0 ) {
-          Os::ValidateFile::Status status;
-          status = Os::ValidateFile::validate((char*) prevFileName, (char*) prevHashFileName);
-          ASSERT_EQ(Os::ValidateFile::VALIDATION_OK, status);
-        }
      }
   }
 
@@ -486,10 +464,8 @@ namespace Svc {
     Fw::Time testTime(TB_NONE, 6, 9876543);
     setTestTime(testTime);
     memset(fileName, 0, sizeof(fileName));
-    snprintf((char*) fileName, sizeof(fileName), "%s_%d_%d_%06d.com", FILE_STR, testTime.getTimeBase(), testTime.getSeconds(), testTime.getUSeconds());
-    memset(hashFileName, 0, sizeof(hashFileName));
-    snprintf((char*) hashFileName, sizeof(hashFileName), "%s_%d_%d_%06d.com%s", FILE_STR, testTime.getTimeBase(), testTime.getSeconds(), testTime.getUSeconds(), Utils::Hash::getFileExtensionString());
-
+    snprintf((char*) fileName, sizeof(fileName), "%d.com", testTime.getSeconds());
+    
     ASSERT_TRUE(comLogger.fileMode == ComLogger::CLOSED);
     ASSERT_EVENTS_SIZE(0);
 
@@ -546,9 +522,6 @@ namespace Svc {
 
     // Open files to make sure they exist:
     ret = file.open((char*) fileName, Os::File::OPEN_READ);
-    ASSERT_EQ(Os::File::OP_OK,ret);
-    file.close();
-    ret = file.open((char*) hashFileName, Os::File::OPEN_READ);
     ASSERT_EQ(Os::File::OP_OK,ret);
     file.close();
   }

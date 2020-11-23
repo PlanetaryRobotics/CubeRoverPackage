@@ -542,5 +542,4 @@ namespace Svc {
         // return key
         this->pingOut_out(0,key);
     }
-
 } // namespace Svc
