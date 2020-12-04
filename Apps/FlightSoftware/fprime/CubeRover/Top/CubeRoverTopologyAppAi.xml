@@ -188,33 +188,9 @@
     <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
   </connection>
 
-
-  <!-- *********************************************************************************************************
-        CONNECTION OF MONITORED COMPONENTS TO TELEMETRIC ACTIVE LOGGER COMPONENT
-       ********************************************************************************************************* 
-      -->
-
-      <!-- Rate group low freq to active logger -->
-  <connection name = "rgLowFreq_to_aLogger">
-    <source component = "rateGroupLowFreq" port = "Log" type = "Log" num = "0" />
-    <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
-  </connection>
-
-      <!-- Rate group med freq to active logger -->
-  <connection name = "rgMedFreq_to_aLogger">
-    <source component = "rateGroupMedFreq" port = "Log" type = "Log" num = "0" />
-    <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
-  </connection>
-
-      <!-- Rate group high freq to active logger -->
-  <connection name = "rgHiFreq_to_aLogger">
-    <source component = "rateGroupHiFreq" port = "Log" type = "Log" num = "0" />
-    <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
-  </connection>
-  
-    <!-- Test blockDriver to active logger -->
-  <connection name = "blockDriver_to_aLogger">
-    <source component = "blockDriver" port = "LogOut" type = "Log" num = "0" />
+    <!-- Logs from active logger to active logger -->
+  <connection name = "aLogger_to_aLogger">
+    <source component = "activeLogger" port = "Log" type = "Log" num = "0" />
     <target component = "activeLogger" port = "LogRecv" type = "Log" num = "0" />
   </connection>
 
