@@ -73,7 +73,7 @@ namespace CubeRover {
     // Sends U16 to the watchdog as defined in design document. Checks stroke value as to what to send watchdog
     // May need to wait to send command everytime it runs as could be a lot of commands
 	// Create watchdog stroke equal to 1 as first bit 1 to tell watchdog scheduled, rest bits 0 to not reset anything
-    U16 watchdog_stroke = 0x00;
+    U8 watchdog_stroke = 0x00;
     // Send first byte of stroke
     linSend(linREG, (uint8_t *)&watchdog_stroke);
     // Check for Response from MSP430 Watchdog (done twice for each byte)
@@ -116,13 +116,13 @@ namespace CubeRover {
     Reset_Specific_cmdHandler(
         const FwOpcodeType opCode,
         const U32 cmdSeq,
-        U16 reset_value
+        U8 reset_value
     )
   {
   	// Send Activity Log/tlm to know watchdog recieved command
   	char command_type[32] = "Reset Specific:";
-  	char reset_val_char[16];
-  	sprintf(reset_val_char, "%u", reset_val_char);
+  	char reset_val_char[8];
+  	sprintf(reset_val_char, "%u", reset_value);
   	strcat(command_type, reset_val_char);
   	Fw::LogStringArg command_type_log = command_type;
   	Fw::TlmString command_type_tlm = command_type;
@@ -132,7 +132,7 @@ namespace CubeRover {
     // Sends a command to watchdog to reset specified devices. Can be hardware through watchdog or component
 
     // If reset_value is greater than 0x20, we are resetting a software component
-    if(reset_value > 0x20)
+    if(reset_value > 0x1B)
     {
       // Reset Components (UNDECIDED YET)
       // TODO
@@ -141,11 +141,11 @@ namespace CubeRover {
     else
     {
       	// Copy first byte of reset value
-      	U16 watchdog_reset_byte1 = reset_value;
+      	U8 watchdog_reset_byte1 = reset_value;
       	// Send watchdog_reset to MSP430 watchdog
       	linSend(linREG, (uint8_t *)&watchdog_reset_byte1);
 		// Check for first byte Response from MSP430 Watchdog
-	    U16 watchdog_reponse_byte1;
+	    U8 watchdog_reponse_byte1;
 	    linGetData(linREG, (uint8_t *)&watchdog_reponse_byte1);
 	    // Check for timeout of response
 	    U32 comm_error = linGetStatusFlag(linREG);
