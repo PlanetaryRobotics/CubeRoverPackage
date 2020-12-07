@@ -13,6 +13,7 @@
 -extern Svc::TlmChanImpl tlmChan("tlmChan");
 -extern Svc::CommandDispatcherImpl cmdDispatcher("cmdDispatcher");
 -extern Svc::GroundInterfaceImpl groundInterface("groundInterface");
+-extern Svc::ActiveLoggerImpl activeLogger("activeLogger");
 +extern Drv::BlockDriverImpl blockDriver;
 +extern Svc::RateGroupDriverImpl rateGroupDriver;
 +extern Svc::ActiveRateGroupImpl rateGroupLowFreq;
@@ -22,6 +23,7 @@
 +extern Svc::TlmChanImpl tlmChan;
 +extern Svc::CommandDispatcherImpl cmdDispatcher;
 +extern Svc::GroundInterfaceComponentImpl groundInterface;
++extern Svc::ActiveLoggerImpl activeLogger;
  
  
  

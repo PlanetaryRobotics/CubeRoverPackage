@@ -11,6 +11,7 @@
   <import_component_type>Svc/TlmChan/TlmChanComponentAi.xml</import_component_type>
   <import_component_type>Svc/CmdDispatcher/CommandDispatcherComponentAi.xml</import_component_type>
   <import_component_type>Svc/GroundInterface/GroundInterfaceComponentAi.xml</import_component_type>
+  <import_component_type>Svc/ActiveLogger/ActiveLoggerComponentAi.xml</import_component_type>
 
 <!-- Declaration of block driver that drive F-prime clocking and other async event -->
   <instance namespace="Drv" name="blockDriver" type="BlockDriver" base_id="1" base_id_window="20" />
@@ -32,6 +33,9 @@
 
 <!-- Declaration of the ground interface service -->
   <instance namespace="Svc" name="groundInterface" type="GroundInterface" base_id="221" base_id_window="20" />
+
+<!-- Declaration of the active logger component -->
+  <instance namespace="Svc" name="activeLogger" type="ActiveLogger" base_id="141" base_id_window="20" />  
 
 <!-- *********************************************************************************************************
         CONNECTION OF CYCLE PORTS BETWEEN COMPONENTS BLOCK DRIVER AND RATE GROUP COMPONENTS
@@ -108,6 +112,11 @@
 
   <connection name = "blockDriver_to_cubeRoverTime">
     <source component = "blockDriver" port = "Time" type = "Time" num = "0" />
+    <target component = "cubeRoverTime" port = "timeGetPort" type = "Time" num = "0"/>
+  </connection>
+
+  <connection name = "activeLogger_to_cubeRoverTime">
+    <source component = "activeLogger" port = "Time" type = "Time" num = "0" />
     <target component = "cubeRoverTime" port = "timeGetPort" type = "Time" num = "0"/>
   </connection>
 

@@ -87,6 +87,13 @@ Svc::GroundInterfaceComponentImpl groundInterface(
 #endif
 );
 
+// --------------------------------------------------------------------------
+Svc::ActiveLoggerImpl activeLogger(
+#if FW_OBJECT_NAMES == 1
+        "ActiveLogger"
+#endif
+);
+
 /**
  * @brief      Run 1 cycle (debug)
  */
@@ -111,6 +118,9 @@ void constructApp(void){
 
   // Initialize cubeRover time component (passive)
   cubeRoverTime.init(0);
+
+  // Initialize Active Logger Component
+  activeLogger.init(ACTIVE_LOGGER_QUEUE_DEPTH, ACTIVE_LOGGER_ID);
 
   // Initialize the telemetric channel component (active)
   tlmChan.init(TLM_CHAN_QUEUE_DEPTH, TLM_CHAN_ID);
@@ -140,4 +150,8 @@ void constructApp(void){
   tlmChan.start(0, /* identifier */
                 TLM_CHAN_AFF, /* thread affinity */
                 TLM_CHAN_QUEUE_DEPTH*MIN_STACK_SIZE_BYTES); /* stack size */
+
+  activeLogger.start(ACTIVE_LOGGER_ID, 
+  					 ACTIVE_LOGGER_AFF, /*CPU Priority*/
+  					 ACTIVE_LOGGER_QUEUE_DEPTH /*Queue Depth*/ * MIN_STACK_SIZE_BYTES /*Min Stack Size in Bytes*/);
 }
