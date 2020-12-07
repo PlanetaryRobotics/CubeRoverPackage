@@ -30,7 +30,7 @@ namespace Drv {
         this->CycleOut_out(0,timer);
         // increment cycles and write channel
         this->tlmWrite_BD_Cycles(this->m_cycles);
-        this->log_WARNING_HI_TestLog();
+        //this->log_WARNING_HI_TestLog();
         this->m_cycles++;
     }
 

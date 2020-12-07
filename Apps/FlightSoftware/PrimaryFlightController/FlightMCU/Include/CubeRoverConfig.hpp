@@ -45,7 +45,7 @@
 
 #define ACTIVE_LOGGER_ID            0
 #define ACTIVE_LOGGER_AFF           26
-#define ACTIVE_LOGGER_QUEUE_DEPTH   1
+#define ACTIVE_LOGGER_QUEUE_DEPTH   10
 
 #define MOTOR_CONTROL_ID            0
 #define MOTOR_CONTROL_AFF           25
