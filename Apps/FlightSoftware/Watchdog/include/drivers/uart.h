@@ -3,7 +3,7 @@
  * @brief File for interfacing with UART protocol hardware module
  * File for interfacing with UART protocol hardware module. Also includes some
  * basic communications protocol parsing.
- * 
+ *
  * UART communication uses eUSCI_A0 (Hercules) and eUSCI_A1 (Lander).
  */
 #ifndef __WATCHDOG_UART_H__
@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 // Forward definition of opaque UART structure, defined in source file
-// Other modules using this structure will not and do not need to know its contents 
+// Other modules using this structure will not and do not need to know its contents
 typedef struct UART__State UART__State;
 
 typedef struct UART__Buffers

@@ -311,7 +311,7 @@ void handle_ground_cmd(unsigned char *buf, uint16_t buf_len) {
             reply_ground_cmd(buf[0], GNDRESP_ECMDPARAM);
             return;
         } else if (rovstate != RS_KEEPALIVE) {
-            /* not in the right state to transition to mission mode */
+            /* not in the right state to transition to sleep mode */
             reply_ground_cmd(buf[0], GNDRESP_ECMDSEQ);
             return;
         }

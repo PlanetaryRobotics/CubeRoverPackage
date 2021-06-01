@@ -8,6 +8,7 @@ static const BOOL FALSE = 0;
 
 #define LANDER_COMMS__MAX_RX_SLIP_MESSAGE_SIZE 256
 #define HERCULES_COMMS__MAX_RX_DATA_SIZE 256
+#define EVENT_QUEUE__MAX_SIZE 64
 
 /**
  * Computes the number of elements in an array.

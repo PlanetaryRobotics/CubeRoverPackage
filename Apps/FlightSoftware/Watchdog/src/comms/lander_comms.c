@@ -65,18 +65,18 @@ LanderComms__Status LanderComms__init(LanderComms__State** lcState, UART__State*
     theState.slipMsgMpsm.bufferLen = SIZE_OF_ARRAY(theState.slipMsgBuffer);
 
     SlipMpsm__Status mpsmStatus = SlipMpsm__initMsg(&(theState.slipMsgMpsm));
-    
+
     if (SLIP_MPSM__STATUS__SUCCESS != mpsmStatus) {
         return LANDER_COMMS__STATUS__ERROR_MPSM_INIT_FAILURE;
     }
 
     theState.initialized = TRUE;
-    *lcState = &theState; 
+    *lcState = &theState;
 
     return LANDER_COMMS__STATUS__SUCCESS;
 }
 
-// If we received a message, will return the data. The message is received as 
+// If we received a message, will return the data. The message is received as
 // a SLIP-encoded full IP packet containing a UDP datagram that contains the message data.
 // The data returned by this function is the message data inside all of that (i.e.
 // the SLIP encoding is decoded and the contents of the IP packet are extracted).
@@ -87,7 +87,7 @@ LanderComms__Status LanderComms__tryGetMessage(LanderComms__State* lcState,
                                                size_t* rxDataLen)
 {
     static uint8_t uartRxData[64] = { 0 };
- 
+
     if (NULL == lcState || NULL == gotMessage || NULL == buffer || NULL == rxDataLen) {
         return LANDER_COMMS__STATUS__ERROR_NULL;
     }
@@ -115,7 +115,7 @@ LanderComms__Status LanderComms__tryGetMessage(LanderComms__State* lcState,
 
         if (UART__STATUS__SUCCESS != uartStatus) {
             return LANDER_COMMS__STATUS__ERROR_UART_RX_FAILURE;
-        }     
+        }
 
         // Iterate through all data, adding it to the SLIP mpsm until a full SLIP packet has been found or
         // we use up all of the data
@@ -124,7 +124,7 @@ LanderComms__Status LanderComms__tryGetMessage(LanderComms__State* lcState,
             SlipMpsm__Status mpsmStatus = SlipMpsm__process(&(lcState->slipMsgMpsm));
 
             if (SLIP_MPSM__STATUS__PARSED_MESSAGE == mpsmStatus) {
-                // If we've already gotten a message in this call and we've now parsed ANOTHER one, we need to 
+                // If we've already gotten a message in this call and we've now parsed ANOTHER one, we need to
                 // indicate this happened to the caller via the return status. All but the first message will
                 // be discarded.
                 if (gotMessage) {
@@ -182,7 +182,7 @@ LanderComms__Status LanderComms__tryGetMessage(LanderComms__State* lcState,
     return returnStatus;
 }
 
-// Will send data as contents of a UDP packet, SLIP encode, then send over UART 
+// Will send data as contents of a UDP packet, SLIP encode, then send over UART
 LanderComms__Status LanderComms__txData(LanderComms__State* lcState, const uint8_t* data, size_t dataLen)
 {
     static const uint8_t SLIP_END_AS_UINT8 = (uint8_t) SLIP_END;

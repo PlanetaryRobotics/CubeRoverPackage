@@ -4,9 +4,9 @@
  * UART communication uses eUSCI_A0 (Hercules) and eUSCI_A1 (Lander).
  *
  * 9600 baud, 1 stop bit, no parity
- * 
+ *
  * References: SLAU367P (https://www.ti.com/lit/ug/slau367p/slau367p.pdf)
- * 
+ *
  * Author: mschnur
  */
 
@@ -200,7 +200,7 @@ UART__Status UART__receive(UART__State* uartState,
         if (RB__STATUS__SUCCESS == rbStatus) {
             // we got another byte
             (*numReceived)++;
-        } else if (RB__STATUS__ERROR__EMPTY == rbStatus) {
+        } else if (RB__STATUS__ERROR_EMPTY == rbStatus) {
             // Have gotten all bytes that have been received so far
             break;
         } else {
@@ -267,7 +267,7 @@ UART__Status UART__initState(UART__State* state, UART__Buffers* buffers)
 void UART__uart0Init()
 {
     // Put eUSCI_A0 in reset
-    UCA0CTLW0 = UCSWRST;                    
+    UCA0CTLW0 = UCSWRST;
 
     /* Setup for eUSCI_A0 and eUSCI_A1 */
     /* On the MSP430FR5994, pin P2.0 is used for TX and pin P2.1 is used for RX
@@ -312,13 +312,13 @@ void UART__uart0Init()
     // UCBRSx = 0x04 (per Table 30-4, SLAU367P)
     // However, per table 30-5 (SLAU367P), for a BRCLK frequency of 8000000 and a baud rate of 9600,
     //  the USBRSx value of 0x49 results in the lowest error (as determined by a search algorithm).
-    //  Therefore, we use 0x49 instead of 0x04. 
+    //  Therefore, we use 0x49 instead of 0x04.
     UCA0MCTLW |= 0x4900U;  // Note: UCBRSx is the top 8 bits of UCAxMCTLW
 
     // Release eUSCI_A0 reset
     UCA0CTLW0 &= ~UCSWRST;
-    // Enable USCI_A0 RX interrupt              
-    UCA0IE |= UCRXIE;                       
+    // Enable USCI_A0 RX interrupt
+    UCA0IE |= UCRXIE;
 }
 
 /**
@@ -332,7 +332,7 @@ void UART__uart1Init() {
     uart1rx.used = 0;
 
     // Put eUSCI_A1 in reset
-    UCA1CTLW0 = UCSWRST;                    
+    UCA1CTLW0 = UCSWRST;
 
     /* Setup for eUSCI_A1 */
     /* On the MSP430FR5994, pin P2.5 is used for TX and pin P2.6 is used for RX
@@ -377,13 +377,13 @@ void UART__uart1Init() {
     // UCBRSx = 0x04 (per Table 30-4, SLAU367P)
     // However, per table 30-5 (SLAU367P), for a BRCLK frequency of 8000000 and a baud rate of 9600,
     //  the USBRSx value of 0x49 results in the lowest error (as determined by a search algorithm).
-    //  Therefore, we use 0x49 instead of 0x04. 
+    //  Therefore, we use 0x49 instead of 0x04.
     UCA1MCTLW |= 0x4900U;  // Note: UCBRSx is the top 8 bits of UCAxMCTLW
 
     // Release eUSCI_A1 reset
     UCA1CTLW0 &= ~UCSWRST;
-    // Enable USCI_A1 RX interrupt            
-    UCA1IE |= UCRXIE;                       
+    // Enable USCI_A1 RX interrupt
+    UCA1IE |= UCRXIE;
 }
 
 void UART__interruptHandler(UART__State* uartState)
@@ -403,7 +403,7 @@ void UART__interruptHandler(UART__State* uartState)
             if (RB__STATUS__SUCCESS == rbStatus) {
                 // We got another byte to send, so put it in the tx buffer
                 *(uartState->registers->UCAxTXBUF) = data;
-            } else if (RB__STATUS__ERROR__EMPTY == rbStatus) {
+            } else if (RB__STATUS__ERROR_EMPTY == rbStatus) {
                 // There are no more bytes to send, so disable TX interrupt for this uart
                 *(uartState->registers->UCAxIE) &= ~UCTXIE;
             } else {
@@ -416,12 +416,12 @@ void UART__interruptHandler(UART__State* uartState)
             /* get the received character */
             data = *(uartState->registers->UCAxRXBUF);
 
-            // Note: calling this means that if the buffer is full and we get new data, 
-            // we'll drop the new data instead of overwriting the oldest data in the 
-            // buffer. If we'd rather overwrite the old data, this will need to be updated. 
+            // Note: calling this means that if the buffer is full and we get new data,
+            // we'll drop the new data instead of overwriting the oldest data in the
+            // buffer. If we'd rather overwrite the old data, this will need to be updated.
             rbStatus = RingBuffer__put(uartState->rxRingBuff, data);
 
-            if (RB__STATUS__ERROR__FULL == rbStatus) {
+            if (RB__STATUS__ERROR_FULL == rbStatus) {
                 // The ring buffer is full, so data will be dropped.
                 // TODO: handling? logging?
             } else if (RB__STATUS__SUCCESS != rbStatus) {
@@ -452,7 +452,7 @@ void UART__interruptHandler(UART__State* uartState)
 #else
     #error Compiler not supported!
 #endif
-    
+
     UART__interruptHandler(&uart0State);
 }
 
@@ -466,6 +466,6 @@ void UART__interruptHandler(UART__State* uartState)
 #else
     #error Compiler not supported!
 #endif
-    
+
     UART__interruptHandler(&uart1State);
 }

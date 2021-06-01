@@ -8,9 +8,9 @@ typedef enum HerculesMpsm__Status {
     HERCULES_MPSM__STATUS__PARSED_MESSAGE = 1, /*!< The function was successful, and successfully parsed a complete message. */
     HERCULES_MPSM__STATUS__SUCCESS = 0, /*!< The function was successful. */
     HERCULES_MPSM__STATUS__ERROR_NULL = -1, /*!< A required argument was NULL */
-    HERCULES_MPSM__STATUS__ERROR_BUFFER_TOO_SMALL = -2, 
+    HERCULES_MPSM__STATUS__ERROR_BUFFER_TOO_SMALL = -2,
     HERCULES_MPSM__STATUS__ERROR_INVALID_SEQUENCE = -3,
-    
+
     HERCULES_MPSM__STATUS__ERROR_RB_INIT_FAILURE = -10,
     HERCULES_MPSM__STATUS__ERROR_RB_PUT_FAILURE = -11,
     HERCULES_MPSM__STATUS__ERROR_RB_PEEK_FAILURE = -12,

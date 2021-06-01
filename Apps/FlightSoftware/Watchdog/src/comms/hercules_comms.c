@@ -58,13 +58,13 @@ HerculesComms__Status HerculesComms__init(HerculesComms__State** hState, UART__S
     theState.herculesMsgMpsm.dataBufferLen = SIZE_OF_ARRAY(theState.rxMsgBuffer);
 
     HerculesMpsm__Status mpsmStatus = HerculesMpsm__initMsg(&(theState.herculesMsgMpsm));
-    
+
     if (HERCULES_MPSM__STATUS__SUCCESS != mpsmStatus) {
         return HERCULES_COMMS__STATUS__ERROR_MPSM_INIT_FAILURE;
     }
 
     theState.initialized = TRUE;
-    *hState = &theState; 
+    *hState = &theState;
 
     return HERCULES_COMMS__STATUS__SUCCESS;
 }
@@ -76,7 +76,7 @@ HerculesComms__Status HerculesComms__tryGetMessage(HerculesComms__State* hState,
                                                    size_t* rxDataLen)
 {
     static uint8_t uartRxData[64] = { 0 };
- 
+
     if (NULL == hState || NULL == gotMessage || NULL == buffer || NULL == rxDataLen) {
         return HERCULES_COMMS__STATUS__ERROR_NULL;
     }
@@ -104,7 +104,7 @@ HerculesComms__Status HerculesComms__tryGetMessage(HerculesComms__State* hState,
 
         if (UART__STATUS__SUCCESS != uartStatus) {
             return HERCULES_COMMS__STATUS__ERROR_UART_RX_FAILURE;
-        }     
+        }
 
         // Iterate through all data, adding it to the hercules mpsm until packet data has been found or
         // we use up all of the data from the UART
@@ -113,7 +113,7 @@ HerculesComms__Status HerculesComms__tryGetMessage(HerculesComms__State* hState,
             HerculesMpsm__Status mpsmStatus = HerculesMpsm__process(&(hState->herculesMsgMpsm));
 
             if (HERCULES_MPSM__STATUS__PARSED_MESSAGE == mpsmStatus) {
-                // If we've already gotten a message in this call and we've now parsed ANOTHER one, we need to 
+                // If we've already gotten a message in this call and we've now parsed ANOTHER one, we need to
                 // indicate this happened to the caller via the return status. All but the first message will
                 // be discarded.
                 if (gotMessage) {

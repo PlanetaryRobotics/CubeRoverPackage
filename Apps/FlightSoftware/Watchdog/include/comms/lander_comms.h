@@ -30,7 +30,7 @@ typedef enum LanderComms__Status
 
 LanderComms__Status LanderComms__init(LanderComms__State** lcState, UART__State* uartState);
 
-// If we received a message, will return the data. The message is received as 
+// If we received a message, will return the data. The message is received as
 // a SLIP-encoded full IP packet containing a UDP datagram that contains the message data.
 // The data returned by this function is the message data inside all of that (i.e.
 // the SLIP encoding is decoded and the contents of the IP packet are extracted).
@@ -40,7 +40,7 @@ LanderComms__Status LanderComms__tryGetMessage(LanderComms__State* lcState,
                                                size_t bufferLen,
                                                size_t* rxDataLen);
 
-// Will send data as contents of a UDP packet, SLIP encode, then send over UART 
+// Will send data as contents of a UDP packet, SLIP encode, then send over UART
 LanderComms__Status LanderComms__txData(LanderComms__State* lcState, const uint8_t* data, size_t dataLen);
 
 

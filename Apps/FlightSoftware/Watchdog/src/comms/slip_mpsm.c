@@ -73,7 +73,7 @@ SlipMpsm__Status SlipMpsm__process(SlipMpsm__Msg* msg, uint8_t newData)
             } else {
                 // Haven't yet found the first end, and this byte isn't it
             }
-            
+
             return SLIP_MPSM__STATUS__NEED_MORE_DATA;
 
         case SLIP_MPSM_STATE__FIRST_BYTE_OR_STARTING_END:
@@ -154,7 +154,7 @@ SlipMpsm__Status SlipMpsm__appendData(SlipMpsm__Msg* msg, uint8_t newData);
             msg->msgStatus = SLIP_MPSM__MSG_STATUS__ERROR_BUFFER_TOO_SMALL;
             return SLIP_MPSM__STATUS__ERROR_BUFFER_TOO_SMALL;
         }
-    
+
         msg->buffer[msg->msgLen] = byteToWrite;
         msg->msgLen++;
     }

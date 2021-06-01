@@ -196,7 +196,7 @@ void watchdog_handle_hercules(I2C_Sensors__Readings *i2cReadings) {
         /* add this packet to the IP/UDP stack send buffer */
         ipudp_send_packet(uart0rx.buf, uart0_rx_len); // @suppress("Invalid arguments")
     }
-    
+
     /* send udp data back to the hercules if necessary */
     if (hercbuf.used > 0) {
         /* write out our buffer */

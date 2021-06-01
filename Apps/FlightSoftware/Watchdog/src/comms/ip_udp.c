@@ -16,7 +16,7 @@ uint16_t ip_checksum(uint8_t *packet, uint16_t packet_len) {
     uint16_t i;
     uint16_t tmp;
     uint32_t accum = 0xffff;
-    
+
     /* store the original packet length before we modify it */
     packet_len_orig = packet_len;
     if (packet_len % 2) {
@@ -64,10 +64,10 @@ uint16_t ip_checksum(uint8_t *packet, uint16_t packet_len) {
 
 /**
  * Verify the values (including checksum) in an ip header.
- * 
+ *
  * Performs some basic validation of the input (e.g. packet length is long
  * enough, etc.) and then checks that the checksum = 0
- * 
+ *
  * Returns 0 if checksum is ok, and non-zero value if header or checksum has
  * some sort of error
  * (NOTE: there is no guarantee for the returned value to be any specific number
@@ -303,7 +303,7 @@ IpUdp__Status IpUdp__generateAndSerializeIpUdpHeadersForData(const uint8_t* udpD
                                                              uint8_t* serializationBuffer,
                                                              size_t bufferLen,
                                                              uint16_t packetId)
-{ 
+{
     if (NULL == udpData || NULL == serializationBuffer) {
         return IP_UDP__STATUS__ERROR_NULL;
     }
@@ -320,7 +320,7 @@ IpUdp__Status IpUdp__generateAndSerializeIpUdpHeadersForData(const uint8_t* udpD
      * NOTE: The code below is kind of gross, but it (presumably) works so I'm reusing it for now.
      * TODO: Rewrite this code so it is neater and maybe less hardcoded.
      *
-     * Old code below 
+     * Old code below
      *==============================================================
      */
 
@@ -358,7 +358,7 @@ IpUdp__Status IpUdp__generateAndSerializeIpUdpHeadersForData(const uint8_t* udpD
 
     /*
      *==============================================================
-     * Old code above 
+     * Old code above
      */
 
     return IP_UDP__STATUS__SUCCESS;

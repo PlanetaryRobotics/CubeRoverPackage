@@ -31,7 +31,7 @@ typedef struct HerculesMpsm__StateMachine
     BOOL initialized;
 
     HerculesMpsm__State currentState;
-    
+
     // This one doesn't need to be volatile, but it's what RingBuffer takes.
     // This is a bit inefficient but hopefully won't have any real impact.
     // If it does have a performance impact we'll need to make something
@@ -82,7 +82,7 @@ HerculesMpsm__Status HerculesMpsm__initMsg(HerculesMpsm__Msg* msg)
         RingBuffer__Status rbStatus = RingBuffer__init(theStateMachine.headerRb,
                                                        theStateMachine.ringBufferMemory,
                                                        SIZE_OF_ARRAY(theStateMachine.ringBufferMemory));
-    
+
         if (RB__STATUS__SUCCESS != rbStatus) {
             return HERCULES_MPSM__STATUS__ERROR_RB_INIT_FAILURE;
         }
@@ -171,7 +171,7 @@ HerculesMpsm__Status HerculesMpsm__checkForValidHeader(HerculesMpsm__Msg* msg, u
             // We can check now if the buffer given by the user is big enough for our data
             if (theStateMachine.dataLength >= msg->dataBufferLen) {
                 rbstatus = RingBuffer__clear(theStateMachine.headerRb);
-                
+
                 // Clear should only throw is headerRb is NULL, and it shouldn't be NULL
                 assert(RB__STATUS__SUCCESS == rbstatus);
 
@@ -182,10 +182,10 @@ HerculesMpsm__Status HerculesMpsm__checkForValidHeader(HerculesMpsm__Msg* msg, u
             // Copy the header into the msg buffer
             for (size_t i = 0; i < SIZE_OF_ARRAY(msg->header); ++i) {
                 rbStatus = RingBuffer__getOverwrite(theStateMachine.headerRb, msg->header + i);
-                
+
                 if (RB__STATUS__SUCCESS != rbStatus) {
                     rbstatus = RingBuffer__clear(theStateMachine.headerRb);
-                
+
                     // Clear should only throw is headerRb is NULL, and it shouldn't be NULL
                     assert(RB__STATUS__SUCCESS == rbstatus);
 

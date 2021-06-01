@@ -39,7 +39,7 @@ typedef enum SlipMpsm__MsgStatus
 
     /**
      * The state machine is done parsing the message because an invalid byte sequence was encountered.
-     * 
+     *
      * For SLIP, the only invalid sequences are an ESC byte followed by something other than ESC_END or ESC_ESC.
      */
     SLIP_MPSM__MSG_STATUS__ERROR_INVALID_SEQUENCE = SLIP_MPSM__STATUS__ERROR_INVALID_SEQUENCE
