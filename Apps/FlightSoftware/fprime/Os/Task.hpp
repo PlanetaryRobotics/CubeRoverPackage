@@ -44,9 +44,12 @@ namespace Os {
 
             static void registerTaskRegistry(TaskRegistry* registry);
 
-        private:
+        protected:
 
             POINTER_CAST m_handle; //!< handle for implementation specific task
+
+        private:
+            
             NATIVE_INT_TYPE m_identifier; //!< thread independent identifer
             TaskString m_name; //!< object name
             NATIVE_INT_TYPE m_affinity; //!< CPU affinity for SMP targets
